@@ -1,0 +1,4 @@
+*.dot
+*~
+*.pdf
+*_TTrace_*.tla
