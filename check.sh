@@ -16,6 +16,7 @@ dot=false
 
 tlc_arg -workers auto
 tlc_arg -fpmem 0.1
+tlc_arg -teSpecOutDir out
 
 while [ -n "$1" ]; do
     arg="$1"
