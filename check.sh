@@ -23,7 +23,7 @@ while [ -n "$1" ]; do
     case "$arg"; in
 	-dot)
 	    dot=true
-	    tlc_arg -dump dot,colorize,actionlabels "$module".dot
+	    tlc_arg -dump dot,colorize,actionlabels,snapshot "$module".dot
 	    ;;
 	-sim)
 	    tlc_arg -simulate num=10 -depth 1
