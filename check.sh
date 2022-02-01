@@ -25,6 +25,9 @@ while [ -n "$1" ]; do
 	    dot=true
 	    tlc_arg -dump dot,colorize,actionlabels "$module".dot
 	    ;;
+	-sim)
+	    tlc_arg -simulate num=10 -depth 1
+	    ;;
 	-diff)
 	    tlc_arg -difftrace
 	    ;;
