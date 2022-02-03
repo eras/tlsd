@@ -53,7 +53,7 @@ echo_and_run() {
 if $sany; then
     echo_and_run sany "$module"
 else
-    echo_and_run tlc ${(@)tlc_args} "$module"
+    echo_and_run nice tlc ${(@)tlc_args} "$module"
     if $dot; then
 	(ulimit -v 1000000;
 	 echo_and_run dot-tla-model ${(@)dot_args} "$module".dot > "$module".pdf)
