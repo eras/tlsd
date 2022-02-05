@@ -2,4 +2,4 @@
 ;;; For more information see (info "(emacs) Directory Variables")
 
 ((tla-mode
-  (tla-tab-width . 4)))
+  (tla-tab-width . 3)))
