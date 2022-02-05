@@ -3,3 +3,9 @@
 *.pdf
 *_TTrace_*.tla
 states
+
+# tlatex
+*.aux
+*.dvi
+*.log
+*.tex
