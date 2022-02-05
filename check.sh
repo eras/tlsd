@@ -31,7 +31,7 @@ while [ -n "$1" ]; do
 	    tlc_arg -dump dot,colorize,actionlabels,snapshot "$module".dot
 	    ;;
 	-sim)
-	    tlc_arg -simulate num=10 -depth 1
+	    tlc_arg -simulate ifile=trace.txt,num=100,stats=full -depth 20
 	    ;;
 	-diff)
 	    tlc_arg -difftrace
