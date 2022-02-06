@@ -9,7 +9,7 @@ from typing import *
 
 import drawSvg as draw
 
-state_re = re.compile(r"^State ([0-9][0-9]*):")
+state_re = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
 messages_re = re.compile(r"^messages_json = \"(.*)\"$")
 quoted_dquote_re = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
@@ -104,6 +104,7 @@ class Node:
     node_id        : NodeId
     active_send    : Dict[NodeId, StateMessage]
     state_id_range : Optional[Tuple[StateId, StateId]]
+    state_names    : Dict[StateId, str]
     env            : Environment
     messages_sent  : Dict[StateId, Dict[NodeId, MessageInfo]]
 
@@ -113,6 +114,7 @@ class Node:
         self.active_send = {}
         self.lane = lane
         self.state_id_range = None
+        self.state_names = {}
         self.messages_sent = {}
 
     def update_state_id_range(self, state_id: StateId) -> None:
@@ -121,18 +123,19 @@ class Node:
         else:
             self.state_id_range = (self.state_id_range[0], state_id)
 
-    def send_active(self, state_id: StateId, peer: NodeId, message: Message) -> None:
+    def send_active(self, state_id: StateId, state_name: str, peer: NodeId, message: Message) -> None:
         self.update_state_id_range(state_id)
         if not peer in self.active_send:
             sent = StateMessage(state_id=state_id, message=message)
             print(f"{self.node_id}\tsends to\t{peer}\t@ state {sent.state_id}\t: {sent.message}")
             if not state_id in self.messages_sent:
                 self.messages_sent[state_id] = {}
+            self.state_names[state_id] = state_name
             self.messages_sent[state_id][peer] = MessageInfo(message=message,
                                                              sent_at=state_id,
                                                              received_at=None)
             self.active_send[peer] = sent
-    def send_inactive(self, state_id: StateId, peer: NodeId) -> None:
+    def send_inactive(self, state_id: StateId, state_name: str, peer: NodeId) -> None:
         self.update_state_id_range(state_id)
         if peer in self.active_send:
             sent = self.active_send[peer]
@@ -141,12 +144,12 @@ class Node:
             print(f"{peer}\trecvs from\t{self.node_id}\t@ state {sent.state_id}\t: {sent.message}")
             del self.active_send[peer]
 
-    def recv_active(self, state_id: StateId, peer: NodeId, message: Message) -> None:
+    def recv_active(self, state_id: StateId, state_name: str, peer: NodeId, message: Message) -> None:
         self.update_state_id_range(state_id)
+        #self.state_names[state_id] = state_name
         # TODO: maybe do something here?
-        pass
 
-    def recv_inactive(self, state_id: StateId, peer: NodeId) -> None:
+    def recv_inactive(self, state_id: StateId, state_name: str, peer: NodeId) -> None:
         self.update_state_id_range(state_id)
         # TODO: maybe do something here?
         pass
@@ -161,11 +164,16 @@ class Node:
         return STATE_ID_WIDTH + LANE_GAP / 2 + self.lane * (LANE_WIDTH + LANE_GAP) + (LANE_WIDTH - STATE_WIDTH) / 2
 
     def draw_message(self, svg, state_id: StateId, peer: "Node", message_info: MessageInfo) -> None:
-        svg.append(draw.Rectangle(self.lane_base_x(),
-                                  - ((state_id - 1) * STATE_HEIGHT + STATE_HEIGHT),
+        state_x = self.lane_base_x()
+        state_y = - ((state_id - 1) * STATE_HEIGHT + STATE_HEIGHT)
+        svg.append(draw.Rectangle(state_x, state_y,
                                   STATE_WIDTH, STATE_HEIGHT,
                                   stroke='black', stroke_width='1',
                                   fill='white'))
+
+        svg.append(draw.Text(self.state_names[state_id], 10,
+                             state_x + STATE_WIDTH / 2.0, state_y + STATE_HEIGHT / 2.0,
+                             text_anchor='middle'))
 
         arrow_right = self.lane_base_x() < peer.lane_base_x()
         adjust_source_x = STATE_WIDTH / 2 + 5
@@ -246,6 +254,7 @@ def process_data():
         state_match = state_re.match(line)
         if state_match:
             state_id = int(state_match[1])
+            state_name = state_match[2]
 
         messages_match = messages_re.match(line)
         if messages_match:
@@ -269,16 +278,16 @@ def process_data():
                     for source in env.nodes.keys():
                         for target in env.nodes.keys():
                             if (source, target) not in messages:
-                                env.get_node(source).send_inactive(state_id, target)
-                                env.get_node(target).recv_inactive(state_id, source)
+                                env.get_node(source).send_inactive(state_id, state_name, target)
+                                env.get_node(target).recv_inactive(state_id, state_name, source)
 
                     # actually there is no causality in the TLA+ model, but IRL there is :)
                     for source in env.nodes.keys():
                         for target in env.nodes.keys():
                             if (source, target) in messages:
                                 message = messages[(source, target)]
-                                env.get_node(source).send_active(state_id, target, message)
-                                env.get_node(target).recv_active(state_id, source, message)
+                                env.get_node(source).send_active(state_id, state_name, target, message)
+                                env.get_node(target).recv_active(state_id, state_name, source, message)
     if state_id is not None:
         height = (STATE_HEIGHT + 2) * state_id
         svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * (len(env.nodes) + 1),
