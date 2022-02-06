@@ -156,14 +156,16 @@ class Node:
 
     def draw(self, svg) -> None:
         self.draw_lane(svg)
-        for state_id, messages  in self.messages_sent.items():
+        for state_id, _ in self.state_names.items():
+            self.draw_state(svg, state_id)
+        for state_id, messages in self.messages_sent.items():
             for peer, message_info in messages.items():
                 self.draw_message(svg, state_id, self.env.get_node(peer), message_info)
 
     def lane_base_x(self) -> float:
         return STATE_ID_WIDTH + LANE_GAP / 2 + self.lane * (LANE_WIDTH + LANE_GAP) + (LANE_WIDTH - STATE_WIDTH) / 2
 
-    def draw_message(self, svg, state_id: StateId, peer: "Node", message_info: MessageInfo) -> None:
+    def draw_state(self, svg, state_id: StateId) -> None:
         state_x = self.lane_base_x()
         state_y = - ((state_id - 1) * STATE_HEIGHT + STATE_HEIGHT)
         svg.append(draw.Rectangle(state_x, state_y,
@@ -175,6 +177,8 @@ class Node:
                              state_x + STATE_WIDTH / 2.0, state_y + STATE_HEIGHT / 2.0,
                              text_anchor='middle'))
 
+
+    def draw_message(self, svg, state_id: StateId, peer: "Node", message_info: MessageInfo) -> None:
         arrow_right = self.lane_base_x() < peer.lane_base_x()
         adjust_source_x = STATE_WIDTH / 2 + 5
         adjust_peer_x = -STATE_WIDTH / 2 - 15
