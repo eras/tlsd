@@ -254,7 +254,7 @@ def convert_tla_function_json(data: Union[list, dict]) -> Dict[int, Message]:
         assert False, "Expected list or dict"
 
 
-def process_data():
+def process_data() -> None:
     state_id = None
     for line in fileinput.input():
         line = line.rstrip()
@@ -264,10 +264,10 @@ def process_data():
             state_name = state_match[2]
 
         messages_match = messages_re.match(line)
-        if messages_match:
+        if messages_match and state_id is not None:
             messages_cur = json.loads(unquote(messages_match[1]))
             # print(f"state {state_id}")
-            messages: Dict[Tuple[NodeId, NodeId], Tuple[int, Message]] = {}
+            messages: Dict[Tuple[NodeId, NodeId], Message] = {}
             for chan, data in messages_cur.items():
                 channel_source_target_match = channel_source_target_re.match(chan)
                 assert channel_source_target_match is not None, "Failed to parse source/target name"
