@@ -59,7 +59,47 @@ class PeerReceived:
 
 def split_string(s: str, len: int) -> List[str]:
     return textwrap.wrap(s, width=len)
-    
+
+def arrowSymbol():
+    return draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='red', close=True)
+
+def crossSymbol():
+    """
+9  x             x
+8 xxx           xxx
+7xxxxx         xxxxx
+6 xxxxx       xxxxx
+5  xxxxx     xxxxx
+4   xxxxx   xxxxx
+3    xxxxx x xxx
+2     xxxxxxxxx
+1      xxxxxxx
+0       xxOxx
+1      xxxxxxx
+2     xxxxxxxxx
+3    xxxxx xxxxx
+4   xxxxx   xxxxx
+5  xxxxx     xxxxx
+6 xxxxx       xxxxx
+7xxxxx         xxxxx
+8 xxx           xxx
+9  x             x
+ 9876543210123456789
+"""
+    return draw.Lines(-0.9, 0.7,
+                      -0.2, 0.0,
+                      -0.9, -0.7,
+                      -0.7, -0.9,
+                      0.0, -0.2,
+                      0.7, -0.9,
+                      0.9, -0.7,
+                      0.2, 0.0,
+                      0.9, 0.7,
+                      0.7, 0.9,
+                      0.0, 0.2,
+                      -0.7, 0.9,
+                      fill='red', close=True)
+
 class Node:
     node_id        : NodeId
     active_send    : Dict[NodeId, StateMessage]
@@ -126,51 +166,41 @@ class Node:
                                   STATE_WIDTH, STATE_HEIGHT,
                                   stroke='black', stroke_width='1',
                                   fill='white'))
+
+        arrow_right = self.lane_base_x() < peer.lane_base_x()
+        adjust_source_x = STATE_WIDTH / 2 + 5
+        adjust_peer_x = -STATE_WIDTH / 2 - 15
+        if not arrow_right:
+            adjust_source_x = -adjust_source_x
+            adjust_peer_x = -adjust_peer_x
+        arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=15, orient='auto')
+
         if message_info.received_at is not None:
-            arrow_right = self.lane_base_x() < peer.lane_base_x()
-            adjust_source_x = STATE_WIDTH / 2 + 5
-            adjust_peer_x = -STATE_WIDTH / 2 - 15
-            if not arrow_right:
-                adjust_source_x = -adjust_source_x
-                adjust_peer_x = -adjust_peer_x
-            arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=15, orient='auto')
-            arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='red', close=True))
-
-            a = (self.lane_base_x() + STATE_WIDTH / 2 + adjust_source_x,
-                 - (((message_info.sent_at - 1) + 0.9) * STATE_HEIGHT))
-            b = (peer.lane_base_x() + STATE_WIDTH / 2 + adjust_peer_x,
-                 - (((message_info.received_at - 1) + 0.1) * STATE_HEIGHT))
-
-            path = draw.Lines(a[0], a[1],
-                              b[0], b[1],
-                              close=False,
-                              fill='#eeee00',
-                              stroke='black',
-                              marker_end=arrow)
-            svg.append(path)
-
-            contents = split_string(json.dumps(message_info.message), len=40)
-            if False:
-                if arrow_right:
-                    text_path = draw.Lines(a[0], a[1], b[0], b[1],
-                                           close=False, stroke='None')
-                else:
-                    text_path = draw.Lines(b[0], b[1], a[0], a[1],
-                                           close=False, stroke='None')
-
-                svg.append(draw.Text(contents, 10,
-                                     path=text_path, text_anchor="start"))
-            else:
-                if arrow_right:
-                    svg.append(draw.Text(contents, 10,
-                                         a[0], a[1]))
-                else:
-                    svg.append(draw.Text(contents, 10,
-                                         b[0], a[1]))
-
-            # print(f"Not skipping {message_info}")
+            arrow.append(arrowSymbol())
         else:
-            print(f"Skipping {message_info}")
+            arrow.append(crossSymbol())
+
+        a = (self.lane_base_x() + STATE_WIDTH / 2 + adjust_source_x,
+             - (((message_info.sent_at - 1) + 0.9) * STATE_HEIGHT))
+
+        if message_info.received_at is not None:
+            arrow_y = message_info.received_at - 1.0
+        else:
+            arrow_y = message_info.sent_at + 0.5
+
+        b = (peer.lane_base_x() + STATE_WIDTH / 2 + adjust_peer_x,
+             - ((arrow_y + 0.1) * STATE_HEIGHT))
+
+        path = draw.Lines(a[0], a[1],
+                          b[0], b[1],
+                          close=False,
+                          fill='#eeee00',
+                          stroke='black',
+                          marker_end=arrow)
+        svg.append(path)
+
+        contents = split_string(json.dumps(message_info.message), len=40)
+        svg.append(draw.Text(contents, 10, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, text_anchor="middle"))
 
     def draw_lane(self, svg) -> None:
         assert self.state_id_range is not None
