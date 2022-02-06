@@ -12,6 +12,7 @@ state_re                 = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
 messages_re              = re.compile(r"^messages_json = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
+error_starts_re          = re.compile(r"^Error: (.*)")
 
 NodeId = Tuple[str, int]
 
@@ -256,17 +257,32 @@ def convert_tla_function_json(data: Union[list, dict]) -> Dict[int, Message]:
 class Data:
     env      : Environment
     state_id : StateId
+    error    : List[str]
 
 def process_data() -> Optional[Data]:
     env = Environment()
 
     state_id = None
+    error: List[str] = []
+    error_handled = False
     for line in fileinput.input():
         line = line.rstrip()
         state_match = state_re.match(line)
         if state_match:
             state_id = int(state_match[1])
             state_name = state_match[2]
+
+        if state_id is None and not error_handled:
+            if error == []:
+                error_match = error_starts_re.match(line)
+                if error_match:
+                    error.append(error_match[1])
+            else:
+                error_match = error_starts_re.match(line)
+                if error_match:
+                    error_handled = True
+                else:
+                    error.append(line)
 
         messages_match = messages_re.match(line)
         if messages_match and state_id is not None:
@@ -305,7 +321,7 @@ def process_data() -> Optional[Data]:
     if state_id is None:
         return None
     else:
-        return Data(env=env, state_id=state_id)
+        return Data(env=env, state_id=state_id, error=error)
 
 def draw_data(data: Data) -> None:
     env = data.env
@@ -314,6 +330,11 @@ def draw_data(data: Data) -> None:
                        height + 20 + 100,
                        origin=(0, -height), displayInline=False)
     svg.append(draw.Rectangle(0, 0, svg.width, svg.height, stroke='none', fill='white'))
+
+    svg.append(draw.Text(data.error, 20,
+                         svg.width / 2.0, STATE_HEIGHT,
+                         text_anchor='middle', valign='middle'))
+
     for cur_state_id in range(1, data.state_id + 1):
         svg.append(draw.Rectangle(0, -(cur_state_id * STATE_HEIGHT),
                                   STATE_ID_WIDTH, STATE_HEIGHT,
