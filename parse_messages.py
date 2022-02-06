@@ -61,7 +61,7 @@ def split_string(s: str, len: int) -> List[str]:
     return textwrap.wrap(s, width=len)
 
 def arrowSymbol():
-    return draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='red', close=True)
+    return draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='green', close=True)
 
 def crossSymbol():
     """
