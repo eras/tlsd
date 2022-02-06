@@ -3,7 +3,6 @@
 import json
 import fileinput
 import re
-import textwrap
 from dataclasses import dataclass
 from typing import *
 
@@ -57,8 +56,11 @@ class PeerReceived:
     peer: NodeId
     sent_at: StateId
 
-def split_string(s: str, len: int) -> List[str]:
-    return textwrap.wrap(s, width=len)
+def json_to_label(data: Dict[str, Any], len: int) -> List[str]:
+    lines = []
+    for key, value in data.items():
+        lines.append(f"{key} = {json.dumps(value)}")
+    return lines
 
 def arrowSymbol():
     return draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='green', close=True)
@@ -212,7 +214,7 @@ class Node:
                           marker_end=arrow)
         svg.append(path)
 
-        contents = split_string(json.dumps(message_info.message), len=40)
+        contents = json_to_label(message_info.message, len=40)
         svg.append(draw.Text(contents, 10, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, text_anchor="middle"))
 
     def draw_lane(self, svg) -> None:
