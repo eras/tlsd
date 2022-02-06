@@ -265,13 +265,13 @@ def process_data():
         if messages_match:
             messages_cur = json.loads(unquote(messages_match[1]))
             # print(f"state {state_id}")
+            messages: Dict[Tuple[NodeId, NodeId], Tuple[int, Message]] = {}
             for chan, data in messages_cur.items():
                 channel_source_target_match = channel_source_target_re.match(chan)
                 assert channel_source_target_match is not None, "Failed to parse source/target name"
                 sending = data['sending']
                 if sending:
                     # print(f"sending: {sending}")
-                    messages: Dict[Tuple[NodeId, NodeId], Tuple[int, Message]] = {}
                     for index, message in convert_tla_function_json(sending).items():
                         source = node_id_of(channel_source_target_match[1], index)
                         target = node_id_of(channel_source_target_match[2], index)
@@ -280,19 +280,21 @@ def process_data():
                         messages[(source, target)] = message
                         env.get_node(source)
                         env.get_node(target)
-                    for source in env.nodes.keys():
-                        for target in env.nodes.keys():
-                            if (source, target) not in messages:
-                                env.get_node(source).send_inactive(state_id, state_name, target)
-                                env.get_node(target).recv_inactive(state_id, state_name, source)
+            for source in env.nodes.keys():
+                for target in env.nodes.keys():
+                    if (source, target) not in messages:
+                        # print(f"source={source}, target={target}")
+                        env.get_node(source).send_inactive(state_id, state_name, target)
+                        env.get_node(target).recv_inactive(state_id, state_name, source)
 
-                    # actually there is no causality in the TLA+ model, but IRL there is :)
-                    for source in env.nodes.keys():
-                        for target in env.nodes.keys():
-                            if (source, target) in messages:
-                                message = messages[(source, target)]
-                                env.get_node(source).send_active(state_id, state_name, target, message)
-                                env.get_node(target).recv_active(state_id, state_name, source, message)
+            # actually there is no causality in the TLA+ model, but IRL there is :)
+            for source in env.nodes.keys():
+                for target in env.nodes.keys():
+                    if (source, target) in messages:
+                        message = messages[(source, target)]
+                        env.get_node(source).send_active(state_id, state_name, target, message)
+                        env.get_node(target).recv_active(state_id, state_name, source, message)
+
     if state_id is not None:
         height = STATE_HEIGHT * (state_id + 1)
         svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * (len(env.nodes) + 1),
