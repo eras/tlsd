@@ -293,7 +293,7 @@ def process_data():
                                 env.get_node(source).send_active(state_id, state_name, target, message)
                                 env.get_node(target).recv_active(state_id, state_name, source, message)
     if state_id is not None:
-        height = (STATE_HEIGHT + 2) * state_id
+        height = STATE_HEIGHT * (state_id + 1)
         svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * (len(env.nodes) + 1),
                            height + 20 + 100,
                            origin=(0, -height), displayInline=False)
