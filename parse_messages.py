@@ -139,6 +139,7 @@ class Node:
         self.update_state_id_range(state_id)
         if peer in self.active_send:
             sent = self.active_send[peer]
+            assert sent.state_id < state_id, f"Message received from {self.node_id} to {peer} in earlier state than it was sent. sent: {sent.state_id} now {state_id}. active sends: {self.active_send}"
             if sent.state_id in self.messages_sent and peer in self.messages_sent[sent.state_id]:
                 self.messages_sent[sent.state_id][peer].received_at = state_id
             print(f"{peer}\trecvs from\t{self.node_id}\t@ state {sent.state_id}\t: {sent.message}")
