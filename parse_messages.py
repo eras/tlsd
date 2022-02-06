@@ -234,8 +234,6 @@ class Node:
                              text_anchor='middle'))
 
 
-env = Environment()
-
 def unquote(s: str) -> str:
     return quoted_dquote_re.sub("\"", s)
 
@@ -254,7 +252,14 @@ def convert_tla_function_json(data: Union[list, dict]) -> Dict[int, Message]:
         assert False, "Expected list or dict"
 
 
-def process_data() -> Optional[StateId]:
+@dataclass
+class Data:
+    env      : Environment
+    state_id : StateId
+
+def process_data() -> Optional[Data]:
+    env = Environment()
+
     state_id = None
     for line in fileinput.input():
         line = line.rstrip()
@@ -297,15 +302,19 @@ def process_data() -> Optional[StateId]:
                         env.get_node(source).send_active(state_id, state_name, target, message)
                         env.get_node(target).recv_active(state_id, state_name, source, message)
 
-    return state_id
+    if state_id is None:
+        return None
+    else:
+        return Data(env=env, state_id=state_id)
 
-def draw_data(state_id: StateId) -> None:
-    height = STATE_HEIGHT * (state_id + 1)
+def draw_data(data: Data) -> None:
+    env = data.env
+    height = STATE_HEIGHT * (data.state_id + 1)
     svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * (len(env.nodes) + 1),
                        height + 20 + 100,
                        origin=(0, -height), displayInline=False)
     svg.append(draw.Rectangle(0, 0, svg.width, svg.height, stroke='none', fill='white'))
-    for cur_state_id in range(1, state_id + 1):
+    for cur_state_id in range(1, data.state_id + 1):
         svg.append(draw.Rectangle(0, -(cur_state_id * STATE_HEIGHT),
                                   STATE_ID_WIDTH, STATE_HEIGHT,
                                   stroke='black', stroke_width='1',
@@ -325,9 +334,8 @@ def draw_data(state_id: StateId) -> None:
     print(f"Saved {png_filename}")
     svg.savePng(png_filename)
 
-
-state_id = process_data()
-if state_id is not None:
-    draw_data(state_id)
+results = process_data()
+if results is not None:
+    draw_data(results)
 else:
     print("No applicable input?")
