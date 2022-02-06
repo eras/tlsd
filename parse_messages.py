@@ -254,7 +254,7 @@ def convert_tla_function_json(data: Union[list, dict]) -> Dict[int, Message]:
         assert False, "Expected list or dict"
 
 
-def process_data() -> None:
+def process_data() -> Optional[StateId]:
     state_id = None
     for line in fileinput.input():
         line = line.rstrip()
@@ -297,32 +297,37 @@ def process_data() -> None:
                         env.get_node(source).send_active(state_id, state_name, target, message)
                         env.get_node(target).recv_active(state_id, state_name, source, message)
 
-    if state_id is not None:
-        height = STATE_HEIGHT * (state_id + 1)
-        svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * (len(env.nodes) + 1),
-                           height + 20 + 100,
-                           origin=(0, -height), displayInline=False)
-        svg.append(draw.Rectangle(0, 0, svg.width, svg.height, stroke='none', fill='white'))
-        for cur_state_id in range(1, state_id + 1):
-            svg.append(draw.Rectangle(0, -(cur_state_id * STATE_HEIGHT),
-                                      STATE_ID_WIDTH, STATE_HEIGHT,
-                                      stroke='black', stroke_width='1',
-                                      fill='none'))
-            svg.append(draw.Text(f"State {cur_state_id}", 20,
-                                 STATE_ID_WIDTH / 2, -((cur_state_id - 0.5) * STATE_HEIGHT),
-                                 text_anchor='middle', valign='middle'))
+    return state_id
+
+def draw_data(state_id: StateId) -> None:
+    height = STATE_HEIGHT * (state_id + 1)
+    svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * (len(env.nodes) + 1),
+                       height + 20 + 100,
+                       origin=(0, -height), displayInline=False)
+    svg.append(draw.Rectangle(0, 0, svg.width, svg.height, stroke='none', fill='white'))
+    for cur_state_id in range(1, state_id + 1):
+        svg.append(draw.Rectangle(0, -(cur_state_id * STATE_HEIGHT),
+                                  STATE_ID_WIDTH, STATE_HEIGHT,
+                                  stroke='black', stroke_width='1',
+                                  fill='none'))
+        svg.append(draw.Text(f"State {cur_state_id}", 20,
+                             STATE_ID_WIDTH / 2, -((cur_state_id - 0.5) * STATE_HEIGHT),
+                             text_anchor='middle', valign='middle'))
 
 
-        for source in env.nodes.values():
-            source.draw(svg)
+    for source in env.nodes.values():
+        source.draw(svg)
 
-        svg_filename = "sequence.svg"
-        png_filename = "sequence.png"
-        print(f"Saved {svg_filename}")
-        svg.saveSvg(svg_filename)
-        print(f"Saved {png_filename}")
-        svg.savePng(png_filename)
-    else:
-        print("No applicable input?")
+    svg_filename = "sequence.svg"
+    png_filename = "sequence.png"
+    print(f"Saved {svg_filename}")
+    svg.saveSvg(svg_filename)
+    print(f"Saved {png_filename}")
+    svg.savePng(png_filename)
 
-process_data()
+
+state_id = process_data()
+if state_id is not None:
+    draw_data(state_id)
+else:
+    print("No applicable input?")
