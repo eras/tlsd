@@ -167,7 +167,7 @@ class Node:
                 self.draw_message(svg, state_id, self.env.get_node(peer), message_info)
 
     def lane_base_x(self) -> float:
-        return STATE_ID_WIDTH + LANE_GAP / 2 + self.lane * (LANE_WIDTH + LANE_GAP) + (LANE_WIDTH - STATE_WIDTH) / 2
+        return STATE_ID_WIDTH + STATE_WIDTH + self.lane * (LANE_WIDTH + LANE_GAP) + (LANE_WIDTH - STATE_WIDTH) / 2
 
     def draw_state(self, svg, state_id: StateId) -> None:
         state_x = self.lane_base_x()
@@ -223,7 +223,7 @@ class Node:
         state_id_min = self.state_id_range[0]
         state_id_max = self.state_id_range[1]
         height = (state_id_max - state_id_min + 1) * STATE_HEIGHT + 20
-        base_x = STATE_ID_WIDTH + LANE_GAP / 2 + self.lane * (LANE_WIDTH + LANE_GAP)
+        base_x = STATE_ID_WIDTH + STATE_WIDTH + self.lane * (LANE_WIDTH + LANE_GAP)
         svg.append(draw.Rectangle(base_x,
                                   - ((state_id_min - 1) * STATE_HEIGHT + height - 10),
                                   LANE_WIDTH, height,
@@ -326,7 +326,7 @@ def process_data() -> Optional[Data]:
 def draw_data(data: Data) -> None:
     env = data.env
     height = STATE_HEIGHT * (data.state_id + 1)
-    svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * (len(env.nodes) + 1),
+    svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * len(env.nodes),
                        height + 20 + 100,
                        origin=(0, -height), displayInline=False)
     svg.append(draw.Rectangle(0, 0, svg.width, svg.height, stroke='none', fill='white'))
