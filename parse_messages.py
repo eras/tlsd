@@ -158,10 +158,12 @@ class Node:
         # TODO: maybe do something here?
         pass
 
-    def draw(self, svg) -> None:
+    def draw_states(self, svg) -> None:
         self.draw_lane(svg)
         for state_id, _ in self.state_names.items():
             self.draw_state(svg, state_id)
+
+    def draw_transitions(self, svg) -> None:
         for state_id, messages in self.messages_sent.items():
             for peer, message_info in messages.items():
                 self.draw_message(svg, state_id, self.env.get_node(peer), message_info)
@@ -346,7 +348,9 @@ def draw_data(data: Data) -> None:
 
 
     for source in env.nodes.values():
-        source.draw(svg)
+        source.draw_states(svg)
+    for source in env.nodes.values():
+        source.draw_transitions(svg)
 
     svg_filename = "sequence.svg"
     png_filename = "sequence.png"
