@@ -106,6 +106,7 @@ def crossSymbol():
 class Node:
     node_id        : NodeId
     active_send    : Dict[NodeId, StateMessage]
+    active_receive : Dict[NodeId, StateMessage]
     state_id_range : Optional[Tuple[StateId, StateId]]
     state_names    : Dict[StateId, str]
     env            : Environment
@@ -115,6 +116,7 @@ class Node:
         self.env = env
         self.node_id = node_id
         self.active_send = {}
+        self.active_receive = {}
         self.lane = lane
         self.state_id_range = None
         self.state_names = {}
@@ -128,9 +130,9 @@ class Node:
 
     def send_active(self, state_id: StateId, state_name: str, peer: NodeId, message: Message) -> None:
         self.update_state_id_range(state_id)
-        if not peer in self.active_send:
+        if peer not in self.active_send:
             sent = StateMessage(state_id=state_id, message=message)
-            print(f"{self.node_id}\tsends to\t{peer}\t@ state {sent.state_id}\t: {sent.message}")
+            print(f"state {state_id}\t{self.node_id}\tsends to\t{peer}\t@ state {sent.state_id}\t: {sent.message}")
             if not state_id in self.messages_sent:
                 self.messages_sent[state_id] = {}
             self.state_names[state_id] = state_name
@@ -145,17 +147,23 @@ class Node:
             assert sent.state_id < state_id, f"Message received from {self.node_id} to {peer} in earlier state than it was sent. sent: {sent.state_id} now {state_id}. active sends: {self.active_send}"
             if sent.state_id in self.messages_sent and peer in self.messages_sent[sent.state_id]:
                 self.messages_sent[sent.state_id][peer].received_at = state_id
-            print(f"{peer}\trecvs from\t{self.node_id}\t@ state {sent.state_id}\t: {sent.message}")
+            print(f"state {state_id}\t{peer}\trecvs from\t{self.node_id}\t@ state {sent.state_id}\t: {sent.message}")
             del self.active_send[peer]
 
     def recv_active(self, state_id: StateId, state_name: str, peer: NodeId, message: Message) -> None:
         self.update_state_id_range(state_id)
+        if peer not in self.active_receive:
+            received = StateMessage(state_id=state_id, message=message)
+            self.active_receive[peer] = received
         #self.state_names[state_id] = state_name
         # TODO: maybe do something here?
 
     def recv_inactive(self, state_id: StateId, state_name: str, peer: NodeId) -> None:
         self.update_state_id_range(state_id)
-        # TODO: maybe do something here?
+        if peer in self.active_receive:
+            received = self.active_receive[peer]
+            del self.active_receive[peer]
+            self.state_names[state_id] = state_name
         pass
 
     def draw_states(self, svg) -> None:
