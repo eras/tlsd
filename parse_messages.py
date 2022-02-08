@@ -132,7 +132,7 @@ class Node:
         self.update_state_id_range(state_id)
         if peer not in self.active_send:
             sent = StateMessage(state_id=state_id, message=message)
-            print(f"state {state_id}\t{self.node_id}\tsends to\t{peer}\t@ state {sent.state_id}\t: {sent.message}")
+            print(f"st {state_id}\t{self.node_id}\tsends to\t{peer}\t@ st {sent.state_id}\t: {sent.message}")
             if not state_id in self.messages_sent:
                 self.messages_sent[state_id] = {}
             self.state_names[state_id] = state_name
@@ -147,7 +147,7 @@ class Node:
             assert sent.state_id < state_id, f"Message received from {self.node_id} to {peer} in earlier state than it was sent. sent: {sent.state_id} now {state_id}. active sends: {self.active_send}"
             if sent.state_id in self.messages_sent and peer in self.messages_sent[sent.state_id]:
                 self.messages_sent[sent.state_id][peer].received_at = state_id
-            print(f"state {state_id}\t{peer}\trecvs from\t{self.node_id}\t@ state {sent.state_id}\t: {sent.message}")
+            print(f"st {state_id}\t{peer}\trecvs from\t{self.node_id}\t@ st {sent.state_id}\t: {sent.message}")
             del self.active_send[peer]
 
     def recv_active(self, state_id: StateId, state_name: str, peer: NodeId, message: Message) -> None:
