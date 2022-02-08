@@ -14,6 +14,7 @@ dot_arg() {
 
 dot=false
 sany=false
+messages=false
 
 tlc_arg -workers auto
 tlc_arg -fpmem 0.1
@@ -39,6 +40,9 @@ while [ -n "$1" ]; do
 	-lr)
 	    dot_arg -lr
 	    ;;
+	-messages)
+	    messages=true
+	    ;;
 	*)
 	    echo unknown argument "$arg"
 	    exit 2
@@ -53,7 +57,11 @@ echo_and_run() {
 if $sany; then
     echo_and_run sany "$module"
 else
-    echo_and_run nice tlc ${(@)tlc_args} "$module"
+    echo_and_run nice tlc ${(@)tlc_args} "$module" | tee check.txt
+    if $messages; then
+	./parse_messages.py < check.txt
+	inkscape --export-pdf=sequence.pdf sequence.svg
+    fi
     if $dot; then
 	(ulimit -v 1000000;
 	 echo_and_run dot-tla-model ${(@)dot_args} "$module".dot > "$module".pdf)
