@@ -77,4 +77,7 @@ else
 	(ulimit -v 1000000;
 	 echo_and_run dot-tla-model ${(@)dot_args} "$module".dot > "$module".pdf)
     fi
+    if $messages || $dot; then
+	killall -HUP llpp
+    fi
 fi

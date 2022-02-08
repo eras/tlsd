@@ -16,19 +16,32 @@ error_starts_re          = re.compile(r"^Error: (.*)")
 
 NodeId = Tuple[str, int]
 
+node_comparison_values = {"client":0, "as": 1, "ms": 2, "mc": 3}
+
+def node_id_key(node_id: NodeId) -> Tuple[Union[str, int], int]:
+    if node_id[0] in node_comparison_values:
+        return (node_comparison_values[node_id[0]], node_id[1])
+    else:
+        return node_id
+
 class Environment:
     nodes: Dict[NodeId, "Node"]
-    next_lane: int
 
     def __init__(self) -> None:
         self.nodes = {}
-        self.next_lane = 0
 
     def get_node(self, node_id: NodeId) -> "Node":
         if node_id not in self.nodes:
-            self.nodes[node_id] = Node(self, node_id, self.next_lane)
-            self.next_lane += 1
+            self.nodes[node_id] = Node(self, node_id)
         return self.nodes[node_id]
+
+    def get_lane(self, node_id: NodeId) -> int:
+        # slow :). could be cached.
+        return [index
+                for index, cur_node_id
+                in enumerate(sorted(self.nodes.keys(), key=node_id_key))
+                if node_id == cur_node_id][0]
+
 
 # TODO: determine a bit more precise type.
 Message = Dict[str, Any]
@@ -112,12 +125,11 @@ class Node:
     env            : Environment
     messages_sent  : Dict[StateId, Dict[NodeId, MessageInfo]]
 
-    def __init__(self, env: Environment, node_id: NodeId, lane: int) -> None:
+    def __init__(self, env: Environment, node_id: NodeId) -> None:
         self.env = env
         self.node_id = node_id
         self.active_send = {}
         self.active_receive = {}
-        self.lane = lane
         self.state_id_range = None
         self.state_names = {}
         self.messages_sent = {}
@@ -176,8 +188,11 @@ class Node:
             for peer, message_info in messages.items():
                 self.draw_message(svg, state_id, self.env.get_node(peer), message_info)
 
+    def lane(self) -> int:
+        return self.env.get_lane(self.node_id)
+
     def lane_base_x(self) -> float:
-        return STATE_ID_WIDTH + STATE_WIDTH + self.lane * (LANE_WIDTH + LANE_GAP) + (LANE_WIDTH - STATE_WIDTH) / 2
+        return STATE_ID_WIDTH + STATE_WIDTH + self.lane() * (LANE_WIDTH + LANE_GAP) + (LANE_WIDTH - STATE_WIDTH) / 2
 
     def draw_state(self, svg, state_id: StateId) -> None:
         state_x = self.lane_base_x()
@@ -233,7 +248,7 @@ class Node:
         state_id_min = self.state_id_range[0]
         state_id_max = self.state_id_range[1]
         height = (state_id_max - state_id_min + 1) * STATE_HEIGHT + 20
-        base_x = STATE_ID_WIDTH + STATE_WIDTH + self.lane * (LANE_WIDTH + LANE_GAP)
+        base_x = STATE_ID_WIDTH + STATE_WIDTH + self.lane() * (LANE_WIDTH + LANE_GAP)
         svg.append(draw.Rectangle(base_x,
                                   - ((state_id_min - 1) * STATE_HEIGHT + height - 10),
                                   LANE_WIDTH, height,
