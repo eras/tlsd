@@ -54,10 +54,21 @@ echo_and_run() {
     "$@"
 }
 
+cfgfile=$(tempfile -s .cfg)
+trap 'rm "$cfgfile"' EXIT
+
+
+if $messages; then
+    grep -v '^ALIAS' System.cfg > $cfgfile
+    echo ALIAS AliasMessage >> $cfgfile
+else
+    cat System.cfg > $cfgfile
+fi
+
 if $sany; then
     echo_and_run sany "$module"
 else
-    echo_and_run nice tlc ${(@)tlc_args} "$module" | tee check.txt
+    echo_and_run nice tlc ${(@)tlc_args} -config $cfgfile "$module" | tee check.txt
     if $messages; then
 	./parse_messages.py < check.txt
 	inkscape --export-pdf=sequence.pdf sequence.svg
