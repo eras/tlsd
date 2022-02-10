@@ -43,11 +43,20 @@ while [ -n "$1" ]; do
 	-messages)
 	    messages=true
 	    ;;
-	*)
+	-*)
 	    echo unknown argument "$arg"
 	    exit 2
+	    ;;
+	*)
+	    module="$arg"
+	    echo Checking module $module
     esac
 done
+
+if ! [ -r "$module.tla" ]; then
+    echo "Cannot find $module.tla"
+    exit 3
+fi
 
 echo_and_run() {
     echo "$*"
@@ -62,7 +71,7 @@ if $messages; then
     grep -v '^ALIAS' System.cfg > $cfgfile
     echo ALIAS AliasMessage >> $cfgfile
 else
-    cat System.cfg > $cfgfile
+    cat "$module.cfg" > $cfgfile
 fi
 
 if $sany; then
