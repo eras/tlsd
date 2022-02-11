@@ -9,7 +9,7 @@ from typing import *
 import drawSvg as draw
 
 state_id_re              = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
-messages_re              = re.compile(r"^messages_json = \"(.*)\"$")
+messages_re              = re.compile(r"^(/\\ )messages_json = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
 error_starts_re          = re.compile(r"^Error: (.*)")
@@ -311,7 +311,7 @@ def process_data() -> Optional[Data]:
 
         messages_match = messages_re.match(line)
         if messages_match and state_id is not None:
-            messages_cur = json.loads(unquote(messages_match[1]))
+            messages_cur = json.loads(unquote(messages_match[2]))
             # print(f"state {state_id}")
             messages: Dict[Tuple[NodeId, NodeId], Message] = {}
             for chan, data in messages_cur.items():
