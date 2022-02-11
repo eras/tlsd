@@ -50,9 +50,9 @@ StateId = int
 
 STATE_ID_WIDTH = 100
 LANE_WIDTH     = 10
-LANE_GAP       = 300
-STATE_HEIGHT   = 50
-STATE_WIDTH    = 80
+LANE_GAP       = 250
+STATE_HEIGHT   = 80
+STATE_WIDTH    = 160
 
 @dataclass
 class StateMessage:
@@ -351,7 +351,7 @@ def process_data() -> Optional[Data]:
 def draw_data(data: Data) -> None:
     env = data.env
     height = STATE_HEIGHT * (data.state_id + 1)
-    svg = draw.Drawing((LANE_WIDTH + LANE_GAP) * len(env.nodes),
+    svg = draw.Drawing(STATE_ID_WIDTH + (LANE_WIDTH + LANE_GAP) * len(env.nodes),
                        height + 20 + 100,
                        origin=(0, -height), displayInline=False)
     svg.append(draw.Rectangle(0, 0, svg.width, svg.height, stroke='none', fill='white'))
