@@ -8,7 +8,7 @@ from typing import *
 
 import drawSvg as draw
 
-state_re                 = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
+state_id_re              = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
 messages_re              = re.compile(r"^messages_json = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
@@ -292,10 +292,10 @@ def process_data() -> Optional[Data]:
     error_handled = False
     for line in fileinput.input():
         line = line.rstrip()
-        state_match = state_re.match(line)
-        if state_match:
-            state_id = int(state_match[1])
-            state_name = state_match[2]
+        state_id_match = state_id_re.match(line)
+        if state_id_match:
+            state_id = int(state_id_match[1])
+            state_name = state_id_match[2]
 
         if state_id is None and not error_handled:
             if error == []:
