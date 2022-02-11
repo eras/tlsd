@@ -10,6 +10,7 @@ import drawSvg as draw
 
 state_id_re              = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
 messages_re              = re.compile(r"^(/\\ )messages_json = \"(.*)\"$")
+state_re                 = re.compile(r"^(/\\ )state_json = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
 error_starts_re          = re.compile(r"^Error: (.*)")
@@ -45,6 +46,7 @@ class Environment:
 
 # TODO: determine a bit more precise type.
 Message = Dict[str, Any]
+State = Dict[str, Any]
 
 StateId = int
 
@@ -124,6 +126,10 @@ class Node:
     state_names    : Dict[StateId, str]
     env            : Environment
     messages_sent  : Dict[StateId, Dict[NodeId, MessageInfo]]
+    states         : Dict[StateId, State]
+
+    # used to map from state ids to their predecessors
+    prev_state_id_cache : Optional[Dict[StateId, StateId]]
 
     def __init__(self, env: Environment, node_id: NodeId) -> None:
         self.env = env
@@ -133,6 +139,29 @@ class Node:
         self.state_id_range = None
         self.state_names = {}
         self.messages_sent = {}
+        self.states = {}
+        self.prev_state_id_cache = None
+
+    def prev_state_id(self, state_id: StateId) -> Optional[StateId]:
+        if not self.prev_state_id_cache:
+            self.prev_state_id_cache = {}
+            prev = None
+            for key in sorted(self.states.keys()):
+                if prev:
+                    self.prev_state_id_cache[key] = prev
+                prev = key
+        return self.prev_state_id_cache.get(state_id)
+
+    def prev_state(self, state_id: StateId) -> Optional[State]:
+        prev_state_id = self.prev_state_id(state_id)
+        if prev_state_id is not None:
+            return self.states[prev_state_id]
+        else:
+            return None
+
+    def update_state(self, state_id: StateId, state: State) -> None:
+        self.prev_state_id_cache = None
+        self.states[state_id] = state
 
     def update_state_id_range(self, state_id: StateId) -> None:
         if self.state_id_range is None:
@@ -202,9 +231,19 @@ class Node:
                                   stroke='black', stroke_width='1',
                                   fill='white'))
 
-        svg.append(draw.Text(self.state_names[state_id], 10,
-                             state_x + STATE_WIDTH / 2.0, state_y + STATE_HEIGHT / 2.0,
-                             text_anchor='middle'))
+        delta_y = -8
+
+        if state_id in self.state_names:
+            svg.append(draw.Text(self.state_names[state_id], 10,
+                                 state_x + STATE_WIDTH / 2.0, state_y + STATE_HEIGHT + delta_y,
+                                 text_anchor='middle', dominant_baseline='hanging'))
+            delta_y -= 12
+
+        state = self.states.get(state_id)
+        if state is not None and state != self.prev_state(state_id):
+            svg.append(draw.Text(json_to_label(state), 8,
+                                 state_x + STATE_WIDTH / 2.0, state_y + STATE_HEIGHT + delta_y,
+                                 text_anchor='middle', dominant_baseline='hanging'))
 
 
     def draw_message(self, svg, state_id: StateId, peer: "Node", message_info: MessageInfo) -> None:
@@ -259,6 +298,8 @@ class Node:
                              base_x, -0 + 1,
                              text_anchor='middle'))
 
+        if self.states.get(1):
+            self.draw_state(svg, 1)
 
 def unquote(s: str) -> str:
     return quoted_dquote_re.sub("\"", s)
@@ -308,6 +349,14 @@ def process_data() -> Optional[Data]:
                     error_handled = True
                 else:
                     error.append(line)
+
+        state_match = state_re.match(line)
+        if state_match and state_id is not None:
+            state_cur = json.loads(unquote(state_match[2]))
+            for name, nodes in state_cur.items():
+                for index, state in convert_tla_function_json(nodes).items():
+                    node_id = node_id_of(name, index)
+                    env.get_node(node_id).update_state(state_id, state)
 
         messages_match = messages_re.match(line)
         if messages_match and state_id is not None:
