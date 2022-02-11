@@ -70,7 +70,7 @@ class PeerReceived:
     peer: NodeId
     sent_at: StateId
 
-def json_to_label(data: Dict[str, Any], len: int) -> List[str]:
+def json_to_label(data: Dict[str, Any]) -> List[str]:
     lines = []
     for key, value in data.items():
         lines.append(f"{key} = {json.dumps(value)}")
@@ -240,7 +240,7 @@ class Node:
                           marker_end=arrow)
         svg.append(path)
 
-        contents = json_to_label(message_info.message, len=40)
+        contents = json_to_label(message_info.message)
         svg.append(draw.Text(contents, 10, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, text_anchor="middle"))
 
     def draw_lane(self, svg) -> None:
