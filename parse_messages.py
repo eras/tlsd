@@ -3,6 +3,7 @@
 import json
 import fileinput
 import re
+import textwrap
 from dataclasses import dataclass
 from typing import *
 
@@ -75,7 +76,9 @@ class PeerReceived:
 def json_to_label(data: Dict[str, Any]) -> List[str]:
     lines = []
     for key, value in data.items():
-        lines.append(f"{key} = {json.dumps(value)}")
+        content = f"{key} = {json.dumps(value)}"
+        for line in textwrap.wrap(content, width=30):
+            lines.append(line)
     return lines
 
 def arrowSymbol():
