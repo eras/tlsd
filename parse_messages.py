@@ -73,13 +73,19 @@ class PeerReceived:
     peer: NodeId
     sent_at: StateId
 
-def json_to_label(data: Dict[str, Any]) -> List[str]:
+def json_to_tspans(data: Dict[str, Any], x: float) -> List[draw.TSpan]:
     lines = []
     for key, value in data.items():
         content = f"{key} = {json.dumps(value)}"
         for line in textwrap.wrap(content, width=30):
-            lines.append(line)
+            lines.append(draw.TSpan(line, x=x, dy="1em"))
     return lines
+
+class TextTSpans(draw.Text):
+    def __init__(self, lines: List[draw.TSpan], fontSize: float, x: float, y: float, **kwargs) -> None:
+        super().__init__([], fontSize, x, y, **kwargs)
+        for line in lines:
+            self.append(line)
 
 def arrowSymbol():
     return draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='green', close=True)
@@ -244,9 +250,10 @@ class Node:
 
         state = self.states.get(state_id)
         if state is not None and state != self.prev_state(state_id):
-            svg.append(draw.Text(json_to_label(state), 8,
-                                 state_x + STATE_WIDTH / 2.0, state_y + STATE_HEIGHT + delta_y,
-                                 text_anchor='middle', dominant_baseline='hanging'))
+            x = state_x + STATE_WIDTH / 2.0
+            svg.append(TextTSpans(json_to_tspans(state, x=x), 8,
+                                  x, state_y + STATE_HEIGHT + delta_y,
+                                  text_anchor='middle', dominant_baseline='hanging'))
 
 
     def draw_message(self, svg, state_id: StateId, peer: "Node", message_info: MessageInfo) -> None:
@@ -282,8 +289,10 @@ class Node:
                           marker_end=arrow)
         svg.append(path)
 
-        contents = json_to_label(message_info.message)
-        svg.append(draw.Text(contents, 10, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, text_anchor="middle"))
+        x = (a[0] + b[0]) / 2
+        svg.append(TextTSpans(json_to_tspans(message_info.message, x=x), 10,
+                              x, (a[1] + b[1]) / 2,
+                              text_anchor="middle"))
 
     def draw_lane(self, svg) -> None:
         assert self.state_id_range is not None
