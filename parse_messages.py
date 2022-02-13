@@ -329,7 +329,10 @@ def unquote(s: str) -> str:
     return quoted_dquote_re.sub("\"", s)
 
 def node_id_of(name: str, index: int) -> NodeId:
-    return (name, index)
+    if name == "as":
+        return ("as", 0)
+    else:
+        return (name, index)
 
 def convert_tla_function_json(data: Union[list, dict]) -> Dict[int, Message]:
     if isinstance(data, list):
