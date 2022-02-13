@@ -20,12 +20,17 @@ NodeId = Tuple[str, int]
 
 node_comparison_values = {"client":0, "as": 1, "ms": 2, "mc": 3}
 
-# from https://github.com/python/typing/issues/182#issuecomment-186306678
-_JSONType_0 = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
-# _JSONType_1 = Union[str, int, float, bool, None, Dict[str, _JSONType_0], List[_JSONType_0]]
-# _JSONType_2 = Union[str, int, float, bool, None, Dict[str, _JSONType_1], List[_JSONType_1]]
-#_JSONType_3 = Union[str, int, float, bool, None, Dict[str, _JSONType_2], List[_JSONType_2]]
-JSONType =  Union[str, int, float, bool, None, Dict[str, _JSONType_0], List[_JSONType_0]]
+# from https://github.com/python/typing/issues/182#issuecomment-899624078
+if TYPE_CHECKING:
+    class JSONArray(list[JSONType], Protocol):  # type: ignore
+        __class__: Type[list[JSONType]]  # type: ignore
+
+    class JSONObject(dict[str, JSONType], Protocol):  # type: ignore
+        __class__: Type[dict[str, JSONType]]  # type: ignore
+
+    JSONType = Union[None, int, float, str, JSONArray, JSONObject]
+else:
+    JSONType = Any
 
 def node_id_key(node_id: NodeId) -> Tuple[Union[str, int], int]:
     if node_id[0] in node_comparison_values:
