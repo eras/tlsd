@@ -4,7 +4,7 @@ import json
 import fileinput
 import re
 import textwrap
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import *
 
 import drawSvg as draw
@@ -84,6 +84,70 @@ class PeerReceived:
     peer: NodeId
     sent_at: StateId
 
+@dataclass
+class Diff:
+    fragment: str
+    different: bool = False # this was the smallest different component in the subtree
+
+T = TypeVar("T")
+def default(value: T, x: Optional[T]) -> T:
+    if x is None:
+        return value
+    else:
+        return x
+
+def compare(old: JSONType, new: JSONType) -> List[Diff]:
+    diff = []
+    if isinstance(old, dict) or isinstance(new, dict):
+        if new is None:
+            diff.append(Diff(fragment="None", different=True))
+        else:
+            assert(isinstance(default(old, {}), dict))
+            assert(isinstance(new, dict))
+            old2: Dict[str, JSONType] = {}
+            if old is not None:
+                assert(isinstance(old, dict))
+                old2 = old
+            first = True
+            diff.append(Diff(fragment="{ "))
+            assert(isinstance(new, dict))
+            for key, new_value in new.items():
+                if not first:
+                    diff.append(Diff(fragment=", "))
+                first = False
+                diff.append(Diff(fragment=f"{key}:"))
+                if key in old2:
+                    old_value = old2[key]
+                    diff.extend(compare(old_value, new_value))
+                else:
+                    diff.extend(compare(None, new_value))
+            diff.append(Diff(fragment=" }"))
+    elif isinstance(old, str) or isinstance(new, str):
+        assert(isinstance(default(old, ""), str))
+        # TODO: quoting
+        if new is None:
+            diff.append(Diff(fragment="None", different=True))
+        else:
+            assert(isinstance(new, str))
+            diff.append(Diff(fragment="\"" + new + "\"",
+                             different=old != new))
+    elif isinstance(old, int) or isinstance(new, int):
+        assert(isinstance(default(old, 0), int))
+        assert(isinstance(default(new, 0), int))
+        if new is None:
+            diff.append(Diff(fragment="None", different=True))
+        else:
+            diff.append(Diff(fragment=str(new),
+                             different=old != new))
+    elif isinstance(old, list) or isinstance(new, list):
+        assert(isinstance(default(old, []), list))
+        assert(isinstance(default(new, []), list))
+        assert False, f"Unsupported data type list: {old} vs {new}"
+    else:
+        assert False, f"Unsupported data type: {old} vs {new}"
+
+    return diff
+
 def json_to_tspans(data: Dict[str, JSONType], x: float) -> List[draw.TSpan]:
     lines = []
     for key, value in data.items():
@@ -91,6 +155,21 @@ def json_to_tspans(data: Dict[str, JSONType], x: float) -> List[draw.TSpan]:
         for line in textwrap.wrap(content, width=30):
             lines.append(draw.TSpan(line, x=x, dy="1em"))
     return lines
+
+def diff_to_tspans(diffs: List[Diff], x: float) -> List[draw.TSpan]:
+    spans = []
+    cur_line_len = 0
+    max_len = 30
+    for diff in diffs:
+        do_wrap = len(diff.fragment) + cur_line_len > max_len
+        font_style = "italic" if diff.different else "normal"
+        if do_wrap:
+            cur_line_len = 0
+            spans.append(draw.TSpan(diff.fragment, x=x, dy="1.1em", font_style=font_style))
+        else:
+            cur_line_len += len(diff.fragment)
+            spans.append(draw.TSpan(diff.fragment, font_style=font_style))
+    return spans
 
 class TextTSpans(draw.Text):
     def __init__(self, lines: List[draw.TSpan], fontSize: float, x: float, y: float, **kwargs) -> None:
@@ -261,9 +340,12 @@ class Node:
             delta_y -= 12
 
         state = self.states.get(state_id)
-        if state is not None and state != self.prev_state(state_id):
+        prev_state = self.prev_state(state_id)
+        if state is not None and state != prev_state:
             x = state_x + STATE_WIDTH / 2.0
-            svg.append(TextTSpans(json_to_tspans(state, x=x), 8,
+            diff = compare(convert_tla_function_to_json(prev_state),
+                           convert_tla_function_to_json(state))
+            svg.append(TextTSpans(diff_to_tspans(diff, x=x), 8,
                                   x, state_y + STATE_HEIGHT + delta_y,
                                   text_anchor='middle', dominant_baseline='hanging'))
 
@@ -334,7 +416,7 @@ def node_id_of(name: str, index: int) -> NodeId:
     else:
         return (name, index)
 
-def convert_tla_function_json(data: Union[list, dict]) -> Dict[int, Message]:
+def convert_tla_function_to_dict(data: Union[list, dict]) -> Dict[int, Message]:
     if isinstance(data, list):
         return {index + 1: data[index] for index in range(0, len(data))}
     elif isinstance(data, dict):
@@ -342,6 +424,21 @@ def convert_tla_function_json(data: Union[list, dict]) -> Dict[int, Message]:
     else:
         assert False, "Expected list or dict"
 
+def convert_tla_function_to_json(data: JSONType) -> JSONType:
+    if data is None:
+        return None
+    elif isinstance(data, int):
+        return data
+    elif isinstance(data, float):
+        return data
+    elif isinstance(data, str):
+        return data
+    elif isinstance(data, list):
+        return {str(index + 1): convert_tla_function_to_json(data[index]) for index in range(0, len(data))}
+    elif isinstance(data, dict):
+        return {key: convert_tla_function_to_json(data[key]) for key in data.keys()}
+    else:
+        assert False, f"Unexpected data: {data}"
 
 @dataclass
 class Data:
@@ -378,7 +475,7 @@ def process_data() -> Optional[Data]:
         if state_match and state_id is not None:
             state_cur = json.loads(unquote(state_match[2]))
             for name, nodes in state_cur.items():
-                for index, state in convert_tla_function_json(nodes).items():
+                for index, state in convert_tla_function_to_dict(nodes).items():
                     node_id = node_id_of(name, index)
                     env.get_node(node_id).update_state(state_id, state)
 
@@ -393,7 +490,7 @@ def process_data() -> Optional[Data]:
                 sending = data['sending']
                 if sending:
                     # print(f"sending: {sending}")
-                    for index, message in convert_tla_function_json(sending).items():
+                    for index, message in convert_tla_function_to_dict(sending).items():
                         source = node_id_of(channel_source_target_match[1], index)
                         target = node_id_of(channel_source_target_match[2], index)
                         # print(f"chan: {chan} sending: {sending} index: {index} message: {message}")
