@@ -20,6 +20,13 @@ NodeId = Tuple[str, int]
 
 node_comparison_values = {"client":0, "as": 1, "ms": 2, "mc": 3}
 
+# from https://github.com/python/typing/issues/182#issuecomment-186306678
+_JSONType_0 = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
+# _JSONType_1 = Union[str, int, float, bool, None, Dict[str, _JSONType_0], List[_JSONType_0]]
+# _JSONType_2 = Union[str, int, float, bool, None, Dict[str, _JSONType_1], List[_JSONType_1]]
+#_JSONType_3 = Union[str, int, float, bool, None, Dict[str, _JSONType_2], List[_JSONType_2]]
+JSONType =  Union[str, int, float, bool, None, Dict[str, _JSONType_0], List[_JSONType_0]]
+
 def node_id_key(node_id: NodeId) -> Tuple[Union[str, int], int]:
     if node_id[0] in node_comparison_values:
         return (node_comparison_values[node_id[0]], node_id[1])
@@ -45,9 +52,8 @@ class Environment:
                 if node_id == cur_node_id][0]
 
 
-# TODO: determine a bit more precise type.
-Message = Dict[str, Any]
-State = Dict[str, Any]
+Message = Dict[str, JSONType]
+State = Dict[str, JSONType]
 
 StateId = int
 
@@ -73,7 +79,7 @@ class PeerReceived:
     peer: NodeId
     sent_at: StateId
 
-def json_to_tspans(data: Dict[str, Any], x: float) -> List[draw.TSpan]:
+def json_to_tspans(data: Dict[str, JSONType], x: float) -> List[draw.TSpan]:
     lines = []
     for key, value in data.items():
         content = f"{key} = {json.dumps(value)}"
