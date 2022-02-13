@@ -163,7 +163,8 @@ class Node:
             prev = None
             for key in sorted(self.states.keys()):
                 if prev:
-                    self.prev_state_id_cache[key] = prev
+                    # mypy gets confused here with warn_unreachable
+                    self.prev_state_id_cache[key] = prev # type: ignore
                 prev = key
         return self.prev_state_id_cache.get(state_id)
 
