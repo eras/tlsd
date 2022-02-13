@@ -330,7 +330,7 @@ def unquote(s: str) -> str:
 
 def node_id_of(name: str, index: int) -> NodeId:
     if name == "as":
-        return ("as", 0)
+        return ("as", 1)
     else:
         return (name, index)
 
