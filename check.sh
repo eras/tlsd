@@ -37,6 +37,9 @@ while [ -n "$1" ]; do
 	-diff)
 	    tlc_arg -difftrace
 	    ;;
+	-cont)
+	    tlc_arg -continue
+	    ;;
 	-lr)
 	    dot_arg -lr
 	    ;;
