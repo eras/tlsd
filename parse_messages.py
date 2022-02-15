@@ -38,6 +38,31 @@ def node_id_key(node_id: NodeId) -> Tuple[Union[str, int], int]:
     else:
         return node_id
 
+class UnreadableInput:
+    """An input that can unread lines. Lines pushed to the unread queue are
+    returned next before consulting the underlying input."""
+    _input: fileinput.FileInput
+    _buffer: List[str]
+
+    def __init__(self, stream: fileinput.FileInput) -> None:
+        self._input = stream
+        self._buffer = []
+
+    def __iter__(self) -> "UnreadableInput":
+        return self
+
+    def unread(self, line: str):
+        self._buffer.append(line)
+
+    def has_unread(self) -> bool:
+        return bool(self._buffer)
+
+    def __next__(self) -> str:
+        if self._buffer:
+            return self._buffer.pop(0)
+        else:
+            return self._input.__next__()
+
 class Environment:
     nodes: Dict[NodeId, "Node"]
 
@@ -446,14 +471,14 @@ class Data:
     state_id : StateId
     error    : List[str]
 
-def process_data() -> Optional[Data]:
+def process_data(input: UnreadableInput) -> Optional[Data]:
     env = Environment()
 
     state_id = None
     error: List[str] = []
     error_handled = False
-    for line in fileinput.input():
-        line = line.rstrip()
+    for orig_line in input:
+        line = orig_line.rstrip()
         state_id_match = state_id_re.match(line)
         if state_id_match:
             state_id = int(state_id_match[1])
@@ -470,6 +495,10 @@ def process_data() -> Optional[Data]:
                     error_handled = True
                 else:
                     error.append(line)
+
+        if state_id is not None and error_starts_re.match(line):
+            input.unread(orig_line)
+            break
 
         state_match = state_re.match(line)
         if state_match and state_id is not None:
@@ -518,7 +547,7 @@ def process_data() -> Optional[Data]:
     else:
         return Data(env=env, state_id=state_id, error=error)
 
-def draw_data(data: Data) -> None:
+def draw_data(filename: str, data: Data) -> None:
     env = data.env
     height = STATE_HEIGHT * (data.state_id + 1)
     svg = draw.Drawing(STATE_ID_WIDTH + (LANE_WIDTH + LANE_GAP) * len(env.nodes),
@@ -545,12 +574,20 @@ def draw_data(data: Data) -> None:
     for source in env.nodes.values():
         source.draw_transitions(svg)
 
-    svg_filename = "sequence.svg"
-    print(f"Saved {svg_filename}")
-    svg.saveSvg(svg_filename)
+    print(f"Saved {filename}")
+    svg.saveSvg(filename)
 
-results = process_data()
-if results is not None:
-    draw_data(results)
-else:
-    print("No applicable input?")
+input = UnreadableInput(fileinput.input())
+count = 0
+while True:
+    results = process_data(input)
+    more_data = input.has_unread()
+    multiple = more_data or count
+    if results is not None:
+        filename = "sequence" + (f"-{(count+1):04}" if multiple else "") + ".svg"
+        draw_data(filename, results)
+    else:
+        print("No applicable input?")
+    if not more_data:
+        break
+    count += 1
