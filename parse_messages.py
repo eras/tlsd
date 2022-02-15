@@ -546,11 +546,8 @@ def draw_data(data: Data) -> None:
         source.draw_transitions(svg)
 
     svg_filename = "sequence.svg"
-    png_filename = "sequence.png"
     print(f"Saved {svg_filename}")
     svg.saveSvg(svg_filename)
-    print(f"Saved {png_filename}")
-    svg.savePng(png_filename)
 
 results = process_data()
 if results is not None:
