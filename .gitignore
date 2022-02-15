@@ -9,3 +9,7 @@ states
 *.dvi
 *.log
 *.tex
+sequence.svg
+sequence.pdf
+sequence-*.svg
+sequence-*.pdf
