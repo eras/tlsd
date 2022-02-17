@@ -15,6 +15,7 @@ state_re                 = re.compile(r"^(/\\ )state_json = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
 error_starts_re          = re.compile(r"^Error: (.*)")
+error_occurred_re        = re.compile(r"Error: The error occurred when TLC was evaluating the nested")
 
 NodeId = Tuple[str, int]
 
@@ -496,7 +497,9 @@ def process_data(input: UnreadableInput) -> Optional[Data]:
                 else:
                     error.append(line)
 
-        if state_id is not None and error_starts_re.match(line):
+        if state_id is not None and \
+           error_starts_re.match(line) and \
+           not error_occurred_re.match(line):
             input.unread(orig_line)
             break
 
