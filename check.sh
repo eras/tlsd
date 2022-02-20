@@ -71,7 +71,7 @@ trap 'rm "$cfgfile"' EXIT
 
 
 if $messages; then
-    grep -v '^ALIAS' System.cfg > $cfgfile
+    grep -v '^ALIAS' $module.cfg > $cfgfile
     echo ALIAS AliasMessage >> $cfgfile
 else
     cat "$module.cfg" > $cfgfile
