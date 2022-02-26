@@ -19,7 +19,7 @@ error_occurred_re        = re.compile(r"Error: The error occurred when TLC was e
 
 NodeId = Tuple[str, int]
 
-node_comparison_values = {"client":0, "as": 1, "ms": 2, "mc": 3}
+node_comparison_values = {"server":0, "client": 1}
 
 # from https://github.com/python/typing/issues/182#issuecomment-899624078
 if TYPE_CHECKING:
@@ -437,8 +437,8 @@ def unquote(s: str) -> str:
     return quoted_dquote_re.sub("\"", s)
 
 def node_id_of(name: str, index: int) -> NodeId:
-    if name == "as":
-        return ("as", 1)
+    if name == "server":
+        return ("server", 1)
     else:
         return (name, index)
 
