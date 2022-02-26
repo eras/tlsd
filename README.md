@@ -69,7 +69,7 @@ get the PDF file `sequence.pdf`. If you have
 been sent a `SIGHUP` and maybe the diagram you have already open will
 be refreshed.
 
-`check.sh` will use TLC to check the model using the configuration
+[`check.sh`](check.sh) will use TLC to check the model using the configuration
 [pingpong.cfg](examples/pingpong.cfg), except it will add `ALIAS
 AliasMessage` to it. The `ALIAS` is defined in the `pingpong.tla` so
 that it produces output in the form the tool currently expects it at.
