@@ -72,7 +72,7 @@ be refreshed.
 [`check.sh`](check.sh) will use TLC to check the model using the
 configuration [pingpong.cfg](examples/pingpong.cfg), except it will
 add `ALIAS AliasMessage` to it. The `ALIAS` is defined in the
-[`pingpong.tla`](pingpong.tla) so that it produces output in the form
+[pingpong.tla](pingpong.tla) so that it produces output in the form
 the tool currently expects it at.
 
 ## Theory of operation
