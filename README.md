@@ -43,11 +43,11 @@ It achieves this by converting translated state traces into something
 that's very close to standard sequence diagrams. The only difference I
 see compared to standard sequence diagrams is that the message sending
 and reception are decoupled in the diagram: messages will be received
-sometimes much later than when they've been sent, and other behavior
-can be interleaved during that time. I'm not sure if the standard
-diagrams would also be able to express this, though, but if this is
-the case then perhaps a lot of this SVG rendering code would be
-needles :).
+later—sometimes much later—compared to when they've been sent, and
+other behavior can be interleaved during that time. I'm not sure if
+the standard diagrams would also be able to express this, though, but
+if this is the case then perhaps a lot of this SVG rendering code
+would be needles :).
 
 Currently this tool is limited to exchanging messages with one central
 system as this has currently been my need for it, but I expect in the
