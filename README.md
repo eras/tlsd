@@ -4,7 +4,7 @@ This is a tool for generating sequence diagrams from
 [TLC](https://github.com/tlaplus/tlaplus/) state traces. It produces
 SVGs that look like [this PDF](doc/sequence.pdf).
 
-This tool is licensed under the [MIT license](LICENSE.MIT].
+This tool is licensed under the [MIT license](LICENSE.MIT).
 
 Copyright: Erkki Seppälä <erkki.seppala@vincit.fi> 2022
 
