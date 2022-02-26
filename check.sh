@@ -4,6 +4,8 @@ typeset -a dot_args=()
 
 module=System
 
+base_path=$(dirname "$0")
+
 tlc_arg() {
     tlc_args=($tlc_args $@)
 }
@@ -82,7 +84,7 @@ if $sany; then
 else
     echo_and_run nice tlc ${(@)tlc_args} -config $cfgfile "$module" | tee check.txt
     if $messages; then
-	./parse_messages.py < check.txt
+	$base_path/parse_messages.py < check.txt
 	inkscape --export-pdf=sequence.pdf sequence.svg
     fi
     if $dot; then
