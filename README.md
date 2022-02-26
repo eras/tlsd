@@ -65,7 +65,7 @@ implement at some point.
 
 If you have [Inkscape](https://inkscape.org) installed, you will also
 get the PDF file `sequence.pdf`. If you have
-[ll]](https://repo.or.cz/w/llpp.git) installed, you will find it has
+[llpp](https://repo.or.cz/w/llpp.git) installed, you will find it has
 been sent a `SIGHUP` and maybe the diagram you have already open will
 be refreshed.
 
