@@ -92,6 +92,6 @@ else
 	 echo_and_run dot-tla-model ${(@)dot_args} "$module".dot > "$module".pdf)
     fi
     if $messages || $dot; then
-	killall -HUP llpp
+	pkill -HUP llpp
     fi
 fi
