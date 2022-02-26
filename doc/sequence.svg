@@ -15,7 +15,7 @@
 <path d="M-0.1,0.5 L-0.1,-0.5 L0.9,0 Z" fill="green" />
 </marker>
 </defs>
-<rect x="0" y="-760" width="880" height="760" stroke="none" fill="white" />
+<rect x="0" y="-120" width="880" height="760" stroke="none" fill="white" />
 <text x="440.0" y="-80" font-size="20" text-anchor="middle"><tspan x="440.0" dy="0.4em">Invariant NotFinished is violated.</tspan></text>
 <rect x="0" y="0" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
 <text x="50.0" y="40.0" font-size="20" text-anchor="middle" dy="0.4em">State 1</text>
