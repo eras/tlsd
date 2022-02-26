@@ -10,8 +10,8 @@ from typing import *
 import drawSvg as draw
 
 state_id_re              = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
-messages_re              = re.compile(r"^(/\\ )messages_json = \"(.*)\"$")
-state_re                 = re.compile(r"^(/\\ )state_json = \"(.*)\"$")
+messages_re              = re.compile(r"^(/\\ )?messages_json = \"(.*)\"$")
+state_re                 = re.compile(r"^(/\\ )?state_json = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
 error_starts_re          = re.compile(r"^Error: (.*)")
