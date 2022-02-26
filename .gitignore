@@ -3,6 +3,7 @@
 *.pdf
 *_TTrace_*.tla
 states
+check.txt
 
 # tlatex
 *.aux
