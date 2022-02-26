@@ -34,7 +34,7 @@ book](http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#boo
 ## So what is this tool then?
 
 When using TLC and an invariant you have set up for it fails, you end
-up with a state dump. Sometimes this state dump can become unwieldly
+up with a state dump. Sometimes this state dump can become unwieldy
 or at least very slow to to analyze. This tool aims to help analyzing
 certain kind of systems: the ones that are composed of individual
 nodes exchanging messages with each other.
@@ -43,7 +43,7 @@ It achieves this by converting translated state traces into something
 that's very close to standard sequence diagrams. The only difference I
 see compared to standard sequence diagrams is that the message sending
 and reception are decoupled in the diagram: messages will be received
-sometimes much later than when they've been sent, and other behaviour
+sometimes much later than when they've been sent, and other behavior
 can be interleaved during that time. I'm not sure if the standard
 diagrams would also be able to express this, though, but if this is
 the case then perhaps a lot of this SVG rendering code would be
