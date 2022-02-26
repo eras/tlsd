@@ -556,7 +556,7 @@ def draw_data(filename: str, data: Data) -> None:
     svg = draw.Drawing(STATE_ID_WIDTH + (LANE_WIDTH + LANE_GAP) * len(env.nodes),
                        height + 20 + 100,
                        origin=(0, -height), displayInline=False)
-    svg.append(draw.Rectangle(0, 0, svg.width, svg.height, stroke='none', fill='white'))
+    svg.append(draw.Rectangle(0, -svg.height + (20 + 100), svg.width, svg.height, stroke='none', fill='white'))
 
     svg.append(draw.Text(data.error, 20,
                          svg.width / 2.0, STATE_HEIGHT,
