@@ -22,7 +22,7 @@ an algorithm or a system at a high, yet in a very mathematically
 precise manner. This allows one to reason about the system behavior in
 a more accurate way than with a textual description of system
 behavior. Combined with the tool TLC (Temporal Logic Checker) to do
-checks with those models it increase the confidence of getting the
+checks with those models it increases the confidence of getting the
 design right from the beginning—or later on finding corner cases in
 the design that had not been detected by rigorous testing or code
 reviews.
