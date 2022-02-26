@@ -30,8 +30,8 @@ At each state (in the dump) there is JSON value with the key
 server and the clients. Currently the tool assumes there is a central
 server all want to exchange messages with, as there is no way to
 indicate which server a client is interacting with. There are two
-kinds of channels in the example: ones from server to the clients and
-ones from the clients to the server.
+kinds of channels in the example: ones from the server to the clients
+and ones from the clients to the server.
 
 Once a message appears in a channel (e.g. the channel is `busy`), it
 is considered to be sent by the tool. Once a message disappears (no
