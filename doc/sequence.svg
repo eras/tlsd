@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="880" height="760" viewBox="0 -120 880 760">
+<defs>
+<marker markerWidth="15.0" markerHeight="15.0" viewBox="-0.1 -0.5 1.0 1.0" orient="auto" id="d0">
+<path d="M-0.1,0.5 L-0.1,-0.5 L0.9,0 Z" fill="green" />
+</marker>
+<marker markerWidth="15.0" markerHeight="15.0" viewBox="-0.1 -0.5 1.0 1.0" orient="auto" id="d1">
+<path d="M-0.1,0.5 L-0.1,-0.5 L0.9,0 Z" fill="green" />
+</marker>
+<marker markerWidth="15.0" markerHeight="15.0" viewBox="-0.1 -0.5 1.0 1.0" orient="auto" id="d2">
+<path d="M-0.1,0.5 L-0.1,-0.5 L0.9,0 Z" fill="green" />
+</marker>
+<marker markerWidth="15.0" markerHeight="15.0" viewBox="-0.1 -0.5 1.0 1.0" orient="auto" id="d3">
+<path d="M-0.1,0.5 L-0.1,-0.5 L0.9,0 Z" fill="green" />
+</marker>
+</defs>
+<rect x="0" y="-760" width="880" height="760" stroke="none" fill="white" />
+<text x="440.0" y="-80" font-size="20" text-anchor="middle"><tspan x="440.0" dy="0.4em">Invariant NotFinished is violated.</tspan></text>
+<rect x="0" y="0" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
+<text x="50.0" y="40.0" font-size="20" text-anchor="middle" dy="0.4em">State 1</text>
+<rect x="0" y="80" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
+<text x="50.0" y="120.0" font-size="20" text-anchor="middle" dy="0.4em">State 2</text>
+<rect x="0" y="160" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
+<text x="50.0" y="200.0" font-size="20" text-anchor="middle" dy="0.4em">State 3</text>
+<rect x="0" y="240" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
+<text x="50.0" y="280.0" font-size="20" text-anchor="middle" dy="0.4em">State 4</text>
+<rect x="0" y="320" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
+<text x="50.0" y="360.0" font-size="20" text-anchor="middle" dy="0.4em">State 5</text>
+<rect x="0" y="400" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
+<text x="50.0" y="440.0" font-size="20" text-anchor="middle" dy="0.4em">State 6</text>
+<rect x="0" y="480" width="100" height="80" stroke="black" stroke-width="1" fill="none" />
+<text x="50.0" y="520.0" font-size="20" text-anchor="middle" dy="0.4em">State 7</text>
+<rect x="260" y="70" width="10" height="500" stroke="black" stroke-width="1" fill="none" />
+<text x="260" y="-1" font-size="20" text-anchor="middle" dy="0em">('server', 1)</text>
+<rect x="185.0" y="80" width="160" height="80" stroke="black" stroke-width="1" fill="white" />
+<text x="265.0" y="88" font-size="10" text-anchor="middle" dominant-baseline="hanging" dy="0em">SendPing</text>
+<rect x="185.0" y="160" width="160" height="80" stroke="black" stroke-width="1" fill="white" />
+<text x="265.0" y="168" font-size="10" text-anchor="middle" dominant-baseline="hanging" dy="0em">SendPing</text>
+<rect x="185.0" y="320" width="160" height="80" stroke="black" stroke-width="1" fill="white" />
+<text x="265.0" y="328" font-size="10" text-anchor="middle" dominant-baseline="hanging" dy="0em">HandlePong</text>
+<rect x="185.0" y="480" width="160" height="80" stroke="black" stroke-width="1" fill="white" />
+<text x="265.0" y="488" font-size="10" text-anchor="middle" dominant-baseline="hanging" dy="0em">HandlePong</text>
+<rect x="520" y="70" width="10" height="500" stroke="black" stroke-width="1" fill="none" />
+<text x="520" y="-1" font-size="20" text-anchor="middle" dy="0em">('client', 1)</text>
+<rect x="445.0" y="240" width="160" height="80" stroke="black" stroke-width="1" fill="white" />
+<text x="525.0" y="248" font-size="10" text-anchor="middle" dominant-baseline="hanging" dy="0em">HandlePings</text>
+<rect x="780" y="150" width="10" height="420" stroke="black" stroke-width="1" fill="none" />
+<text x="780" y="-1" font-size="20" text-anchor="middle" dy="0em">('client', 2)</text>
+<rect x="705.0" y="400" width="160" height="80" stroke="black" stroke-width="1" fill="white" />
+<text x="785.0" y="408" font-size="10" text-anchor="middle" dominant-baseline="hanging" dy="0em">HandlePings</text>
+<path d="M350.0,152.0 L430.0,248.0" fill="#eeee00" stroke="black" marker-end="url(#d0)" />
+<text x="390.0" y="200.0" font-size="10" text-anchor="middle"><tspan x="390.0" dy="1em">message = "ping"</tspan></text>
+<path d="M350.0,232.0 L690.0,408.0" fill="#eeee00" stroke="black" marker-end="url(#d1)" />
+<text x="520.0" y="320.0" font-size="10" text-anchor="middle"><tspan x="520.0" dy="1em">message = "ping"</tspan></text>
+<path d="M440.0,312.0 L360.0,328.0" fill="#eeee00" stroke="black" marker-end="url(#d2)" />
+<text x="400.0" y="320.0" font-size="10" text-anchor="middle"><tspan x="400.0" dy="1em">message = "pong"</tspan></text>
+<path d="M700.0,472.0 L360.0,488.0" fill="#eeee00" stroke="black" marker-end="url(#d3)" />
+<text x="530.0" y="480.0" font-size="10" text-anchor="middle"><tspan x="530.0" dy="1em">message = "pong"</tspan></text>
+</svg>
