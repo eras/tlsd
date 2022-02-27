@@ -18,8 +18,6 @@ error_occurred_re        = re.compile(r"Error: The error occurred when TLC was e
 
 NodeId = Tuple[str, int]
 
-node_comparison_values = {"server":0, "client": 1}
-
 # from https://github.com/python/typing/issues/182#issuecomment-899624078
 if TYPE_CHECKING:
     class JSONArray(list[JSONType], Protocol):  # type: ignore
@@ -32,11 +30,13 @@ if TYPE_CHECKING:
 else:
     JSONType = Any
 
-def node_id_key(node_id: NodeId) -> Tuple[Union[str, int], int]:
-    if node_id[0] in node_comparison_values:
-        return (node_comparison_values[node_id[0]], node_id[1])
-    else:
-        return node_id
+def make_node_id_key_comparison(node_comparison_values: Dict[str, int]):
+    def node_id_key(node_id: NodeId) -> Tuple[Union[str, int], int]:
+        if node_id[0] in node_comparison_values:
+            return (node_comparison_values[node_id[0]], node_id[1])
+        else:
+            return node_id
+    return node_id_key
 
 class UnreadableInput:
     """An input that can unread lines. Lines pushed to the unread queue are
@@ -64,10 +64,12 @@ class UnreadableInput:
             return self._input.__next__()
 
 class Environment:
-    nodes: Dict[NodeId, "Node"]
+    nodes      : Dict[NodeId, "Node"]
+    lane_order : Dict[str, int]
 
     def __init__(self) -> None:
         self.nodes = {}
+        self.lane_order = {}
 
     def get_node(self, node_id: NodeId) -> "Node":
         if node_id not in self.nodes:
@@ -78,7 +80,7 @@ class Environment:
         # slow :). could be cached.
         return [index
                 for index, cur_node_id
-                in enumerate(sorted(self.nodes.keys(), key=node_id_key))
+                in enumerate(sorted(self.nodes.keys(), key=make_node_id_key_comparison(self.lane_order)))
                 if node_id == cur_node_id][0]
 
 
@@ -120,6 +122,13 @@ def default(value: T, x: Optional[T]) -> T:
         return value
     else:
         return x
+
+U = TypeVar("U")
+def invert_dict(kvs: Dict[T, U]) -> Dict[U, T]:
+    result: Dict[U, T] = {}
+    for key, value in kvs.items():
+        result[value] = key
+    return result
 
 def compare(old: JSONType, new: JSONType) -> List[Diff]:
     diff = []
@@ -514,6 +523,9 @@ def process_messages(env: Environment, state_id: int, state_name: str, json: JSO
                 env.get_node(source).send_active(state_id, state_name, target, message)
                 env.get_node(target).recv_active(state_id, state_name, source, message)
 
+def process_lane_order(env: Environment, json: JSONType) -> None:
+    env.lane_order = invert_dict(convert_tla_function_to_dict(json))
+
 def read_variables(env: Environment, state_id: int, state_name: str, input: UnreadableInput):
     """Reads the variables of one state"""
     variables: Dict[str, JSONType] = {}
@@ -527,6 +539,8 @@ def read_variables(env: Environment, state_id: int, state_name: str, input: Unre
             input.unread(orig_line)
             break
 
+    if "lane_order_json" in variables:
+        process_lane_order(env, variables["lane_order_json"])
     if "state_json" in variables:
         process_state(env, state_id, variables["state_json"])
     if "messages_json" in variables:
