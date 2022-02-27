@@ -1,6 +1,6 @@
 ------------------------------ MODULE MChannel ------------------------------
 
-(* MChannel is an synchronous channel between with a buffer of at most
+(* MChannel is an asynchronous channel between with a buffer of at most
    one message.
 
    The state is stored in the channels function. Channels maps via Id to the
