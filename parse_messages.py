@@ -450,7 +450,7 @@ def node_id_of(name: str, index: int) -> NodeId:
     else:
         return (name, index)
 
-def convert_tla_function_to_dict(data: Union[list, dict]) -> Dict[int, Message]:
+def convert_tla_function_to_dict(data: Union[list, dict]) -> Dict[int, JSONType]:
     if isinstance(data, list):
         return {index + 1: data[index] for index in range(0, len(data))}
     elif isinstance(data, dict):
@@ -486,6 +486,7 @@ def process_state(env: Environment, state_id: int, json: JSONType) -> None:
         assert isinstance(nodes, dict)
         for index, state in convert_tla_function_to_dict(nodes).items():
             node_id = node_id_of(name, index)
+            assert isinstance(state, dict)
             env.get_node(node_id).update_state(state_id, state)
 
 def process_messages(env: Environment, state_id: int, state_name: str, json: JSONType) -> None:
@@ -524,7 +525,7 @@ def process_messages(env: Environment, state_id: int, state_name: str, json: JSO
                 env.get_node(target).recv_active(state_id, state_name, source, message)
 
 def process_lane_order(env: Environment, json: JSONType) -> None:
-    env.lane_order = invert_dict(convert_tla_function_to_dict(json))
+    env.lane_order = {is_str(json): index for index, json in convert_tla_function_to_dict(is_list(json)).items()}
 
 def read_variables(env: Environment, state_id: int, state_name: str, input: UnreadableInput):
     """Reads the variables of one state"""
