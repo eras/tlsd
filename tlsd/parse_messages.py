@@ -618,17 +618,18 @@ def draw_data(filename: str, data: Data) -> None:
     print(f"Saved {filename}")
     svg.saveSvg(filename)
 
-input = UnreadableInput(fileinput.input())
-count = 0
-while True:
-    results = process_data(input)
-    more_data = input.has_unread()
-    multiple = more_data or count
-    if results is not None:
-        filename = "sequence" + (f"-{(count+1):04}" if multiple else "") + ".svg"
-        draw_data(filename, results)
-    else:
-        print("No applicable input?")
-    if not more_data:
-        break
-    count += 1
+def main():
+    input = UnreadableInput(fileinput.input())
+    count = 0
+    while True:
+        results = process_data(input)
+        more_data = input.has_unread()
+        multiple = more_data or count
+        if results is not None:
+            filename = "sequence" + (f"-{(count+1):04}" if multiple else "") + ".svg"
+            draw_data(filename, results)
+        else:
+            print("No applicable input?")
+        if not more_data:
+            break
+        count += 1

@@ -59,9 +59,9 @@ some point.
 ## Trying out the example
 
 1) clone the repository, `cd` to it
-2) `pip install drawSvg`
+2) `pip install .`
 3) `cd examples`
-4) run `tlc pingpong | ../parse_messages.py` to get `sequence.svg`
+4) run `tlc pingpong | python -m tlsd` to get `sequence.svg`
 
 [pingpong.cfg](examples/pingpong.cfg) refers to `ALIAS AliasMessages`
 where the `ALIAS` is defined in [pingpong.tla](examples/pingpong.tla)

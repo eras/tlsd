@@ -4,6 +4,7 @@
 *_TTrace_*.tla
 states
 check.txt
+__pycache__
 
 # tlatex
 *.aux
