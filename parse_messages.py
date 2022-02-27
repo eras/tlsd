@@ -10,8 +10,7 @@ from typing import *
 import drawSvg as draw
 
 state_id_re              = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
-messages_re              = re.compile(r"^(/\\ )?messages_json = \"(.*)\"$")
-state_re                 = re.compile(r"^(/\\ )?state_json = \"(.*)\"$")
+variable_re              = re.compile(r"^(/\\ )?([^ ]*_json) = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
 channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
 error_starts_re          = re.compile(r"^Error: (.*)")
@@ -472,6 +471,67 @@ class Data:
     state_id : StateId
     error    : List[str]
 
+def process_state(env: Environment, state_id: int, json: JSONType) -> None:
+    assert isinstance(json, dict)
+    for name, nodes in json.items():
+        assert isinstance(nodes, dict)
+        for index, state in convert_tla_function_to_dict(nodes).items():
+            node_id = node_id_of(name, index)
+            env.get_node(node_id).update_state(state_id, state)
+
+def process_messages(env: Environment, state_id: int, state_name: str, json: JSONType) -> None:
+    # print(f"state {state_id}")
+    messages: Dict[Tuple[NodeId, NodeId], Message] = {}
+    assert isinstance(json, dict)
+    for chan, data in json.items():
+        assert isinstance(data, dict)
+        channel_source_target_match = channel_source_target_re.match(chan)
+        assert channel_source_target_match is not None, "Failed to parse source/target name"
+        sending = data['sending']
+        if sending:
+            assert isinstance(sending, dict) or isinstance(sending, list)
+            # print(f"sending: {sending}")
+            for index, message in convert_tla_function_to_dict(sending).items():
+                source = node_id_of(channel_source_target_match[1], index)
+                target = node_id_of(channel_source_target_match[2], index)
+                # print(f"chan: {chan} sending: {sending} index: {index} message: {message}")
+                # print(f"  {source}->{target} message: {message}")
+                messages[(source, target)] = message
+                env.get_node(source)
+                env.get_node(target)
+    for source in env.nodes.keys():
+        for target in env.nodes.keys():
+            if (source, target) not in messages:
+                # print(f"source={source}, target={target}")
+                env.get_node(source).send_inactive(state_id, state_name, target)
+                env.get_node(target).recv_inactive(state_id, state_name, source)
+
+    # actually there is no causality in the TLA+ model, but IRL there is :)
+    for source in env.nodes.keys():
+        for target in env.nodes.keys():
+            if (source, target) in messages:
+                message = messages[(source, target)]
+                env.get_node(source).send_active(state_id, state_name, target, message)
+                env.get_node(target).recv_active(state_id, state_name, source, message)
+
+def read_variables(env: Environment, state_id: int, state_name: str, input: UnreadableInput):
+    """Reads the variables of one state"""
+    variables: Dict[str, JSONType] = {}
+    for orig_line in input:
+        line = orig_line.rstrip()
+        variable_match = variable_re.match(line)
+
+        if variable_match:
+            variables[variable_match[2]] = json.loads(unquote(variable_match[3]))
+        else:
+            input.unread(orig_line)
+            break
+
+    if "state_json" in variables:
+        process_state(env, state_id, variables["state_json"])
+    if "messages_json" in variables:
+        process_messages(env, state_id, state_name, variables["messages_json"])
+
 def process_data(input: UnreadableInput) -> Optional[Data]:
     env = Environment()
 
@@ -484,6 +544,8 @@ def process_data(input: UnreadableInput) -> Optional[Data]:
         if state_id_match:
             state_id = int(state_id_match[1])
             state_name = state_id_match[2]
+
+            read_variables(env, state_id, state_name, input)
 
         if state_id is None and not error_handled:
             if error == []:
@@ -502,48 +564,6 @@ def process_data(input: UnreadableInput) -> Optional[Data]:
            not error_occurred_re.match(line):
             input.unread(orig_line)
             break
-
-        state_match = state_re.match(line)
-        if state_match and state_id is not None:
-            state_cur = json.loads(unquote(state_match[2]))
-            for name, nodes in state_cur.items():
-                for index, state in convert_tla_function_to_dict(nodes).items():
-                    node_id = node_id_of(name, index)
-                    env.get_node(node_id).update_state(state_id, state)
-
-        messages_match = messages_re.match(line)
-        if messages_match and state_id is not None:
-            messages_cur = json.loads(unquote(messages_match[2]))
-            # print(f"state {state_id}")
-            messages: Dict[Tuple[NodeId, NodeId], Message] = {}
-            for chan, data in messages_cur.items():
-                channel_source_target_match = channel_source_target_re.match(chan)
-                assert channel_source_target_match is not None, "Failed to parse source/target name"
-                sending = data['sending']
-                if sending:
-                    # print(f"sending: {sending}")
-                    for index, message in convert_tla_function_to_dict(sending).items():
-                        source = node_id_of(channel_source_target_match[1], index)
-                        target = node_id_of(channel_source_target_match[2], index)
-                        # print(f"chan: {chan} sending: {sending} index: {index} message: {message}")
-                        # print(f"  {source}->{target} message: {message}")
-                        messages[(source, target)] = message
-                        env.get_node(source)
-                        env.get_node(target)
-            for source in env.nodes.keys():
-                for target in env.nodes.keys():
-                    if (source, target) not in messages:
-                        # print(f"source={source}, target={target}")
-                        env.get_node(source).send_inactive(state_id, state_name, target)
-                        env.get_node(target).recv_inactive(state_id, state_name, source)
-
-            # actually there is no causality in the TLA+ model, but IRL there is :)
-            for source in env.nodes.keys():
-                for target in env.nodes.keys():
-                    if (source, target) in messages:
-                        message = messages[(source, target)]
-                        env.get_node(source).send_active(state_id, state_name, target, message)
-                        env.get_node(target).recv_active(state_id, state_name, source, message)
 
     if state_id is None:
         return None
