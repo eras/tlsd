@@ -483,10 +483,10 @@ class Data:
 def process_state(env: Environment, state_id: int, json: JSONType) -> None:
     assert isinstance(json, dict)
     for name, nodes in json.items():
-        assert isinstance(nodes, dict)
+        assert isinstance(nodes, dict) or isinstance(nodes, list)
         for index, state in convert_tla_function_to_dict(nodes).items():
             node_id = node_id_of([name, index])
-            assert isinstance(state, dict)
+            assert isinstance(state, dict), f"Expected dictionary but got {state}"
             env.get_node(node_id).update_state(state_id, state)
 
 def process_messages(env: Environment, state_id: int, state_name: str, json: JSONType) -> None:
