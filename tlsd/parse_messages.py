@@ -495,7 +495,7 @@ def process_messages(env: Environment, state_id: int, state_name: str, json: JSO
     assert isinstance(json, list)
     for message in json:
         # developer convenience to filter these empty messages here
-        if not bool(message):
+        if not message or not message[0]:
             continue
         assert isinstance(message, list) and len(message) == 1 and isinstance(message[0], list) and len(message[0]) == 3, \
             f"Expected message be of structure [[from, id], [to, id], message], got {message}"
