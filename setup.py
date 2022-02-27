@@ -12,6 +12,7 @@ setup(
     description='Tool for generating sequence diagrams from TLC state traces',
     long_description=open('README.md').read(),
     install_requires=[
-        "drawSvg",
+        "drawSvg==1.8.3",
+        "pillow==5.4.1"
     ],
 )
