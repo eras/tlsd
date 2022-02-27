@@ -91,8 +91,8 @@ Finished ==
 
 NotFinished == \lnot Finished
 
-AliasMessage == [messages_json |-> ToJson([
-                   chans_server_to_client |-> ServerToClientChannel(1)!Alias(ClientIds),
-                   chans_client_to_server |-> ClientToServerChannel(1)!Alias(ClientIds)])]
+AliasMessages == [messages_json |-> ToJson([
+                    chans_server_to_client |-> ServerToClientChannel(1)!Alias(ClientIds),
+                    chans_client_to_server |-> ClientToServerChannel(1)!Alias(ClientIds)])]
 
 ================================================================================

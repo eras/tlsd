@@ -61,19 +61,11 @@ implement at some point.
 1) clone the repository, `cd` to it
 2) `pip install drawSvg`
 3) `cd examples`
-4) run `../check.sh pingpong -messages` to get `sequence.svg`
+4) run `tlc pingpong | ../parse_messages.py` to get `sequence.svg`
 
-If you have [Inkscape](https://inkscape.org) installed, you will also
-get the PDF file `sequence.pdf`. If you have
-[llpp](https://repo.or.cz/w/llpp.git) installed, you will find it has
-been sent a `SIGHUP` and maybe the diagram you have already open will
-be refreshed.
-
-[`check.sh`](check.sh) will use TLC to check the model using the
-configuration [pingpong.cfg](examples/pingpong.cfg), except it will
-add `ALIAS AliasMessage` to it. The `ALIAS` is defined in the
-[pingpong.tla](examples/pingpong.tla) so that it produces output in the form
-the tool currently expects it at.
+[pingpong.cfg](examples/pingpong.cfg) refers to `ALIAS AliasMessages`
+where the `ALIAS` is defined in [pingpong.tla](examples/pingpong.tla)
+to produce output in the form the tool currently expects it at.
 
 ## Theory of operation
 
