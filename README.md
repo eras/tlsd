@@ -59,7 +59,7 @@ some point.
 ## Trying out the example
 
 1) clone the repository, `cd` to it
-2) `pip install .`
+2) `pip install .` You may wish to `sudo apt install python3-pillow` first in Debian-based systems.
 3) `cd examples`
 4) run `tlc pingpong | python -m tlsd` to get `sequence.svg`
 
