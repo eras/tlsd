@@ -37,12 +37,10 @@ Recv(data) ==
    /\ data = channels[Id].val
    /\ channels' = [channels EXCEPT ![Id] = [@ EXCEPT !.val=Null, !.busy = FALSE]]
 
-AliasSending(Ids) ==
-   LET pending == {id \in Ids: channels[id].busy} IN
-   [id \in pending |-> channels[id].val]
-
-Alias(Ids) ==
-   [sending |-> AliasSending(Ids)]
+Sending ==
+   IF channels[Id].busy
+   THEN {channels[Id].val}
+   ELSE {}
 
 InitValue == [val |-> Null, busy |-> FALSE]
 

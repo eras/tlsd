@@ -91,9 +91,15 @@ Finished ==
 
 NotFinished == \lnot Finished
 
-AliasMessages == [lane_order_json |-> ToJson(<<"client", "server">>),
-                  messages_json |-> ToJson([
-                    chans_server_to_client |-> ServerToClientChannel(1)!Alias(ClientIds),
-                    chans_client_to_server |-> ClientToServerChannel(1)!Alias(ClientIds)])]
+AllMessages ==
+   UNION({UNION({
+      {{<<"server", 1>>} \X {<<"client", client_id>>} \X ServerToClientChannel(client_id)!Sending}
+      , {{<<"client", client_id>>} \X {<<"server", 1>>} \X ClientToServerChannel(client_id)!Sending}
+      }) : client_id \in ClientIds})
+
+AliasMessages ==
+   [lane_order_json |-> ToJson(<<"client", "server">>),
+    messages_json |-> ToJson(AllMessages)
+    ]
 
 ================================================================================

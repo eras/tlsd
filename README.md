@@ -49,12 +49,12 @@ the standard diagrams would also be able to express this, though, but
 if this is the case then perhaps a lot of this SVG rendering code
 would be needles :).
 
-Currently this tool is limited to exchanging messages with one central
-system as this has currently been my need for it, but I expect in the
-future exchanging messages arbitrarily among the nodes will also be
-supported. It also doesn't try to avoid overlapping labels or lines
-with other objects yet, but this is also something I'm planning to
-implement at some point.
+Any node can exchange messages with any other node, though the example
+doesn't yet demonstrate this.
+
+The tool doesn't try to avoid overlapping labels or lines with other
+objects yet, but this is also something I'm planning to implement at
+some point.
 
 ## Trying out the example
 

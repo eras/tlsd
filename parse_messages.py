@@ -12,7 +12,6 @@ import drawSvg as draw
 state_id_re              = re.compile(r"^State ([0-9][0-9]*): <([^ ]*)")
 variable_re              = re.compile(r"^(/\\ )?([^ ]*_json) = \"(.*)\"$")
 quoted_dquote_re         = re.compile(r"\\\"")
-channel_source_target_re = re.compile(r"^chans_([^_]*)_to_([^_]*)$")
 error_starts_re          = re.compile(r"^Error: (.*)")
 error_occurred_re        = re.compile(r"Error: The error occurred when TLC was evaluating the nested")
 
@@ -444,11 +443,12 @@ class Node:
 def unquote(s: str) -> str:
     return quoted_dquote_re.sub("\"", s)
 
-def node_id_of(name: str, index: int) -> NodeId:
-    if name == "server":
-        return ("server", 1)
-    else:
-        return (name, index)
+def node_id_of(json: JSONType) -> NodeId:
+    assert isinstance(json, list)
+    assert len(json) == 2
+    assert isinstance(json[0], str)
+    assert isinstance(json[1], int)
+    return (json[0], json[1])
 
 def convert_tla_function_to_dict(data: Union[list, dict]) -> Dict[int, JSONType]:
     if isinstance(data, list):
@@ -485,30 +485,27 @@ def process_state(env: Environment, state_id: int, json: JSONType) -> None:
     for name, nodes in json.items():
         assert isinstance(nodes, dict)
         for index, state in convert_tla_function_to_dict(nodes).items():
-            node_id = node_id_of(name, index)
+            node_id = node_id_of([name, index])
             assert isinstance(state, dict)
             env.get_node(node_id).update_state(state_id, state)
 
 def process_messages(env: Environment, state_id: int, state_name: str, json: JSONType) -> None:
     # print(f"state {state_id}")
     messages: Dict[Tuple[NodeId, NodeId], Message] = {}
-    assert isinstance(json, dict)
-    for chan, data in json.items():
-        assert isinstance(data, dict)
-        channel_source_target_match = channel_source_target_re.match(chan)
-        assert channel_source_target_match is not None, "Failed to parse source/target name"
-        sending = data['sending']
-        if sending:
-            assert isinstance(sending, dict) or isinstance(sending, list)
-            # print(f"sending: {sending}")
-            for index, message in convert_tla_function_to_dict(sending).items():
-                source = node_id_of(channel_source_target_match[1], index)
-                target = node_id_of(channel_source_target_match[2], index)
-                # print(f"chan: {chan} sending: {sending} index: {index} message: {message}")
-                # print(f"  {source}->{target} message: {message}")
-                messages[(source, target)] = message
-                env.get_node(source)
-                env.get_node(target)
+    assert isinstance(json, list)
+    for message in json:
+        # developer convenience to filter these empty messages here
+        if not bool(message):
+            continue
+        assert isinstance(message, list) and len(message) == 1 and isinstance(message[0], list) and len(message[0]) == 3, \
+            f"Expected message be of structure [[from, id], [to, id], message], got {message}"
+        source = node_id_of(message[0][0])
+        target = node_id_of(message[0][1])
+        # print(f"chan: {chan} sending: {sending} index: {index} message[0]: {message[0]}")
+        # print(f"  {source}->{target} message[0]: {message[0]}")
+        messages[(source, target)] = message[0][2]
+        env.get_node(source)
+        env.get_node(target)
     for source in env.nodes.keys():
         for target in env.nodes.keys():
             if (source, target) not in messages:
@@ -525,6 +522,12 @@ def process_messages(env: Environment, state_id: int, state_name: str, json: JSO
                 env.get_node(target).recv_active(state_id, state_name, source, message)
 
 def process_lane_order(env: Environment, json: JSONType) -> None:
+    def is_list(json: JSONType) -> list:
+        assert isinstance(json, list)
+        return json
+    def is_str(json: JSONType) -> str:
+        assert isinstance(json, str)
+        return json
     env.lane_order = {is_str(json): index for index, json in convert_tla_function_to_dict(is_list(json)).items()}
 
 def read_variables(env: Environment, state_id: int, state_name: str, input: UnreadableInput):
