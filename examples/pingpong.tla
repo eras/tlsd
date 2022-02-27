@@ -97,9 +97,14 @@ AllMessages ==
       , {{<<"client", client_id>>} \X {<<"server", 1>>} \X ClientToServerChannel(client_id)!Sending}
       }) : client_id \in ClientIds})
 
+State ==
+   [server |-> <<[pings |-> num_pings_sent,
+                  pongs |-> num_pongs_received]>>]
+
 AliasMessages ==
    [lane_order_json |-> ToJson(<<"client", "server">>),
-    messages_json |-> ToJson(AllMessages)
+    messages_json |-> ToJson(AllMessages),
+    state_json |-> ToJson(State)
     ]
 
 ================================================================================
