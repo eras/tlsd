@@ -277,11 +277,10 @@ class Node:
     def prev_state_id(self, state_id: StateId) -> Optional[StateId]:
         if not self.prev_state_id_cache:
             self.prev_state_id_cache = {}
-            prev = None
+            prev: Optional[StateId] = None
             for key in sorted(self.states.keys()):
                 if prev:
-                    # mypy gets confused here with warn_unreachable
-                    self.prev_state_id_cache[key] = prev # type: ignore
+                    self.prev_state_id_cache[key] = prev
                 prev = key
         return self.prev_state_id_cache.get(state_id)
 
