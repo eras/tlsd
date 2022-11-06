@@ -44,6 +44,7 @@ ClientToServerChannel(Id) == INSTANCE MChannel WITH channels <- client_to_server
 
 (* Server sends ping to a client *)
 ServerSendPing ==
+   /\ num_pings_sent < NumberOfPings
    /\ \E client_id \in ClientIds:
       ServerToClientChannel(client_id)!Send([message |-> "ping"])
    /\ num_pings_sent' = num_pings_sent + 1
@@ -62,11 +63,14 @@ ClientHandlePing(client_id) ==
    /\ ClientToServerChannel(client_id)!Send([message |-> "pong"])
    /\ UNCHANGED<<num_pings_sent, num_pongs_received>>
 
+Stutter == UNCHANGED<<vars>>
+
 Next ==
    \/ ServerSendPing
    \/ ServerHandlePong
    \/ \E client_id \in ClientIds:
       ClientHandlePing(client_id)
+   \/ Stutter
 
 Init ==
    /\ server_to_client = [client_id \in ClientIds |-> ServerToClientChannel(client_id)!InitValue]
