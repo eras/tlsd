@@ -67,6 +67,11 @@ some point.
 where the `ALIAS` is defined in [pingpong.tla](examples/pingpong.tla)
 to produce output in the form the tool currently expects it at.
 
+To produce decent pdfs out of the svg files you can use [Inkscape](https://inkscape.org/):
+```
+inkscape --export-pdf=sequence.pdf sequence.svg
+```
+
 ## Theory of operation
 
 At each state (in the dump) there is JSON value with the key
