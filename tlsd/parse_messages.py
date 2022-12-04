@@ -291,9 +291,11 @@ class Node:
         else:
             return None
 
-    def update_state(self, state_id: StateId, state: State) -> None:
+    def update_state(self, state_id: StateId, state: State, action_name: str) -> None:
         self.prev_state_id_cache = None
         self.states[state_id] = state
+        if self.states[state_id] != self.states.get(state_id - 1):
+            self.action_names[state_id] = action_name
 
     def update_state_id_range(self, state_id: StateId) -> None:
         if self.state_id_range is None:
@@ -341,8 +343,10 @@ class Node:
 
     def draw_states(self, svg) -> None:
         self.draw_lane(svg)
-        for state_id, _ in self.action_names.items():
-            self.draw_state(svg, state_id)
+        for state_id, _ in self.states.items():
+            if (state_id in self.action_names or
+                self.states[state_id] != self.states.get(state_id - 1)):
+                self.draw_state(svg, state_id)
 
     def draw_transitions(self, svg) -> None:
         for state_id, messages in self.messages_sent.items():
@@ -372,8 +376,8 @@ class Node:
             delta_y -= 12
 
         state = self.states.get(state_id)
-        prev_state = self.prev_state(state_id)
-        if state is not None and state != prev_state:
+        if state is not None:
+            prev_state = self.prev_state(state_id)
             x = state_x + STATE_WIDTH / 2.0
             diff = compare(convert_tla_function_to_json(prev_state),
                            convert_tla_function_to_json(state))
@@ -479,14 +483,14 @@ class Data:
     state_id : StateId
     error    : List[str]
 
-def process_state(env: Environment, state_id: int, json: JSONType) -> None:
+def process_state(env: Environment, state_id: int, action_name: str, json: JSONType) -> None:
     assert isinstance(json, dict)
     for name, nodes in json.items():
         assert isinstance(nodes, dict) or isinstance(nodes, list)
         for index, state in convert_tla_function_to_dict(nodes).items():
             node_id = node_id_of([name, index])
             assert isinstance(state, dict), f"Expected dictionary but got {state}"
-            env.get_node(node_id).update_state(state_id, state)
+            env.get_node(node_id).update_state(state_id, state, action_name)
 
 def process_messages(env: Environment, state_id: int, action_name: str, json: JSONType) -> None:
     messages: Dict[Tuple[NodeId, NodeId], Message] = {}
@@ -544,7 +548,7 @@ def read_variables(env: Environment, state_id: int, action_name: str, input: Unr
     if "lane_order_json" in variables:
         process_lane_order(env, variables["lane_order_json"])
     if "state_json" in variables:
-        process_state(env, state_id, variables["state_json"])
+        process_state(env, state_id, action_name, variables["state_json"])
     if "messages_json" in variables:
         process_messages(env, state_id, action_name, variables["messages_json"])
 
