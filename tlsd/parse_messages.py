@@ -255,7 +255,7 @@ class Node:
     active_send    : Dict[NodeId, StateMessage]
     active_receive : Dict[NodeId, StateMessage]
     state_id_range : Optional[Tuple[StateId, StateId]]
-    state_names    : Dict[StateId, str]
+    action_names   : Dict[StateId, str]
     env            : Environment
     messages_sent  : Dict[StateId, Dict[NodeId, MessageInfo]]
     states         : Dict[StateId, State]
@@ -269,7 +269,7 @@ class Node:
         self.active_send = {}
         self.active_receive = {}
         self.state_id_range = None
-        self.state_names = {}
+        self.action_names = {}
         self.messages_sent = {}
         self.states = {}
         self.prev_state_id_cache = None
@@ -301,19 +301,19 @@ class Node:
         else:
             self.state_id_range = (self.state_id_range[0], state_id)
 
-    def send_active(self, state_id: StateId, state_name: str, peer: NodeId, message: Message) -> None:
+    def send_active(self, state_id: StateId, action_name: str, peer: NodeId, message: Message) -> None:
         self.update_state_id_range(state_id)
         if peer not in self.active_send:
             sent = StateMessage(state_id=state_id, message=message)
             print(f"st {state_id}\t{self.node_id}\tsends to\t{peer}\t@ st {sent.state_id}\t: {sent.message}")
             if not state_id in self.messages_sent:
                 self.messages_sent[state_id] = {}
-            self.state_names[state_id] = state_name
+            self.action_names[state_id] = action_name
             self.messages_sent[state_id][peer] = MessageInfo(message=message,
                                                              sent_at=state_id,
                                                              received_at=None)
             self.active_send[peer] = sent
-    def send_inactive(self, state_id: StateId, state_name: str, peer: NodeId) -> None:
+    def send_inactive(self, state_id: StateId, action_name: str, peer: NodeId) -> None:
         self.update_state_id_range(state_id)
         if peer in self.active_send:
             sent = self.active_send[peer]
@@ -323,25 +323,25 @@ class Node:
             print(f"st {state_id}\t{peer}\trecvs from\t{self.node_id}\t@ st {sent.state_id}\t: {sent.message}")
             del self.active_send[peer]
 
-    def recv_active(self, state_id: StateId, state_name: str, peer: NodeId, message: Message) -> None:
+    def recv_active(self, state_id: StateId, action_name: str, peer: NodeId, message: Message) -> None:
         self.update_state_id_range(state_id)
         if peer not in self.active_receive:
             received = StateMessage(state_id=state_id, message=message)
             self.active_receive[peer] = received
-        #self.state_names[state_id] = state_name
+        #self.action_names[state_id] = action_name
         # TODO: maybe do something here?
 
-    def recv_inactive(self, state_id: StateId, state_name: str, peer: NodeId) -> None:
+    def recv_inactive(self, state_id: StateId, action_name: str, peer: NodeId) -> None:
         self.update_state_id_range(state_id)
         if peer in self.active_receive:
             received = self.active_receive[peer]
             del self.active_receive[peer]
-            self.state_names[state_id] = state_name
+            self.action_names[state_id] = action_name
         pass
 
     def draw_states(self, svg) -> None:
         self.draw_lane(svg)
-        for state_id, _ in self.state_names.items():
+        for state_id, _ in self.action_names.items():
             self.draw_state(svg, state_id)
 
     def draw_transitions(self, svg) -> None:
@@ -365,8 +365,8 @@ class Node:
 
         delta_y = -8
 
-        if state_id in self.state_names:
-            svg.append(draw.Text(self.state_names[state_id], 10,
+        if state_id in self.action_names:
+            svg.append(draw.Text(self.action_names[state_id], 10,
                                  state_x + STATE_WIDTH / 2.0, state_y + STATE_HEIGHT + delta_y,
                                  text_anchor='middle', dominant_baseline='hanging'))
             delta_y -= 12
@@ -488,8 +488,7 @@ def process_state(env: Environment, state_id: int, json: JSONType) -> None:
             assert isinstance(state, dict), f"Expected dictionary but got {state}"
             env.get_node(node_id).update_state(state_id, state)
 
-def process_messages(env: Environment, state_id: int, state_name: str, json: JSONType) -> None:
-    # print(f"state {state_id}")
+def process_messages(env: Environment, state_id: int, action_name: str, json: JSONType) -> None:
     messages: Dict[Tuple[NodeId, NodeId], Message] = {}
     assert isinstance(json, list)
     for message in json:
@@ -509,16 +508,16 @@ def process_messages(env: Environment, state_id: int, state_name: str, json: JSO
         for target in env.nodes.keys():
             if (source, target) not in messages:
                 # print(f"source={source}, target={target}")
-                env.get_node(source).send_inactive(state_id, state_name, target)
-                env.get_node(target).recv_inactive(state_id, state_name, source)
+                env.get_node(source).send_inactive(state_id, action_name, target)
+                env.get_node(target).recv_inactive(state_id, action_name, source)
 
     # actually there is no causality in the TLA+ model, but IRL there is :)
     for source in env.nodes.keys():
         for target in env.nodes.keys():
             if (source, target) in messages:
                 message = messages[(source, target)]
-                env.get_node(source).send_active(state_id, state_name, target, message)
-                env.get_node(target).recv_active(state_id, state_name, source, message)
+                env.get_node(source).send_active(state_id, action_name, target, message)
+                env.get_node(target).recv_active(state_id, action_name, source, message)
 
 def process_lane_order(env: Environment, json: JSONType) -> None:
     def is_list(json: JSONType) -> list:
@@ -529,7 +528,7 @@ def process_lane_order(env: Environment, json: JSONType) -> None:
         return json
     env.lane_order = {is_str(json): index for index, json in convert_tla_function_to_dict(is_list(json)).items()}
 
-def read_variables(env: Environment, state_id: int, state_name: str, input: UnreadableInput):
+def read_variables(env: Environment, state_id: int, action_name: str, input: UnreadableInput):
     """Reads the variables of one state"""
     variables: Dict[str, JSONType] = {}
     for orig_line in input:
@@ -547,7 +546,7 @@ def read_variables(env: Environment, state_id: int, state_name: str, input: Unre
     if "state_json" in variables:
         process_state(env, state_id, variables["state_json"])
     if "messages_json" in variables:
-        process_messages(env, state_id, state_name, variables["messages_json"])
+        process_messages(env, state_id, action_name, variables["messages_json"])
 
 def process_data(input: UnreadableInput) -> Optional[Data]:
     env = Environment()
@@ -560,9 +559,9 @@ def process_data(input: UnreadableInput) -> Optional[Data]:
         state_id_match = state_id_re.match(line)
         if state_id_match:
             state_id = int(state_id_match[1])
-            state_name = state_id_match[2]
+            action_name = state_id_match[2]
 
-            read_variables(env, state_id, state_name, input)
+            read_variables(env, state_id, action_name, input)
 
         if state_id is None and not error_handled:
             if error == []:
