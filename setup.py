@@ -15,4 +15,9 @@ setup(
         "drawSvg==1.8.3",
         "pillow==5.4.1"
     ],
+    entry_points = {
+        'console_scripts': [
+            'tlsd = tlsd.parse_messages:main',
+        ],
+    },
 )

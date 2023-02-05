@@ -60,8 +60,9 @@ some point.
 
 1) clone the repository, `cd` to it
 2) `pip install .` You may wish to `sudo apt install python3-pillow` first in Debian-based systems.
+A good alternative to plain `pip` is to use [pipx](https://pypi.org/project/pipx/): `pipx install .`.
 3) `cd examples`
-4) run `tlc pingpong | python -m tlsd` to get `sequence.svg`
+4) run `tlc pingpong | tlsd` to get `sequence.svg`
 
 [pingpong.cfg](examples/pingpong.cfg) refers to `ALIAS AliasMessages`
 where the `ALIAS` is defined in [pingpong.tla](examples/pingpong.tla)
